@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Вернуть расписание</title>
+<style>
+body{font:17px/1.6 system-ui,sans-serif;margin:0;padding:24px;min-height:80vh;display:grid;place-items:center;background:#182d49;color:#f5f7fa}main{max-width:440px}h1{font-size:28px;line-height:1.25}button,a{display:inline-block;padding:14px 20px;border:0;border-radius:12px;font:inherit;font-weight:650;background:#f1ca7d;color:#182d49;text-decoration:none;cursor:pointer}button:disabled{opacity:.65;cursor:wait}p{color:#d9e1ed}#fallback{display:none}
+</style>
+<main><h1>Вернуть расписание</h1><p>Если браузер показывает версию с входом в аккаунт, нажмите кнопку ниже. Сохранённые настройки темы, языка и рекорд игры останутся.</p><button id="restore">Открыть прежнюю версию</button><p id="status" role="status" aria-live="polite"></p><a id="fallback" href="./?restored=2.2">Открыть расписание</a></main>
+<script>
+const button = document.getElementById('restore');
+const status = document.getElementById('status');
+button.addEventListener('click', async () => {
+  button.disabled = true;
+  status.textContent = 'Обновляем сохранённую версию…';
+  try {
+    const base = new URL('./', location.href);
+    if ('serviceWorker' in navigator) {
+      for (const registration of await navigator.serviceWorker.getRegistrations()) {
+        if (registration.scope === base.href) await registration.unregister();
+      }
+    }
+    if ('caches' in window) {
+      const prefix = 'schedule-public-' + encodeURIComponent(base.pathname) + '-';
+      for (const name of await caches.keys()) {
+        if (name.startsWith(prefix)) await caches.delete(name);
+      }
+    }
+    // The old worker deliberately passes URLs with query parameters to the network.
+    location.replace(new URL('./?restored=2.2', base).href);
+  } catch {
+    status.textContent = 'Не удалось обновить автоматически. Откройте расписание по ссылке ниже.';
+    document.getElementById('fallback').style.display = 'inline-block';
+    button.disabled = false;
+  }
+});
+</script>
+</html>
