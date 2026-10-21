@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-  <title>Расписание ИН-25-1</title>
+  <title>Концепт дизайна v2 — Расписание ИН-25-1</title>
   <script>
     try { if(localStorage.getItem('schedule-theme')==='dark') document.documentElement.dataset.theme='dark'; } catch(e){}
     try {const palette=localStorage.getItem('schedule-palette');if(['en','de'].includes(palette))document.documentElement.dataset.palette=palette;} catch(e){}
@@ -358,6 +358,228 @@ main{padding-bottom:calc(50px + env(safe-area-inset-bottom,0px))}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   </style>
+<style id="design-concept-v2">
+/* Concept only: a calmer, more compact visual system over the existing app. */
+:root{
+  --ink:#1b2e49;--muted:#6b7890;--line:#e2e8f0;--paper:#f4f6fa;--surface:#fff;
+  --controls:#f4f6fa;--header:#173458;--header-shade:#294664;--burgundy:#d86c5f;--red:#b7414b;
+  --shadow:0 12px 32px #172a4610;--focus:#e08a72;--button:#eef2f7;
+  --button-border:#e0e6ee;--button-hover:#e5ebf3;--selected:#193756;
+  --selected-text:#fff;--rule:#dce3ed;--card-edge:#c8d4e3;
+  --inclusive-edge:#397b78;--inclusive-bg:#e9f3f1;--inclusive-ink:#245c59;
+  --conflict-edge:#e9b3b3;--conflict-bg:#fff1f0;--conflict-ink:#9b3137;
+  --tag:#eef1f5;--srsp-bg:#f3eadb;--srsp-ink:#72572f;--group-bg:#e3ebf6;
+  --room:#465b76;--gold:#d2a45d;--soft-gold:#f3ead9;--portal-shadow:0 12px 32px #172a4610;
+  --time-bg:#f0f4f8;--card-highlight:#fff;--menu-tint:#f6f8fb;--portal-grid:#172a4604;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+}
+:root[data-theme="dark"]{
+  --ink:#eef2f8;--muted:#aab7ca;--line:#35455b;--paper:#101822;--surface:#182435;
+  --controls:#141f2e;--header:#142a46;--header-shade:#203c63;--burgundy:#dd806f;--red:#ff9299;
+  --shadow:0 12px 28px #05090f42;--focus:#f2b5a2;--button:#253348;
+  --button-border:#3c506a;--button-hover:#30435a;--selected:#d9e5f2;
+  --selected-text:#19283a;--rule:#34465c;--card-edge:#50637b;
+  --inclusive-edge:#71aaa3;--inclusive-bg:#1b3437;--inclusive-ink:#bce2dc;
+  --conflict-edge:#784c55;--conflict-bg:#35232a;--conflict-ink:#ffb9bd;
+  --tag:#29394e;--srsp-bg:#40382b;--srsp-ink:#e9d5ad;--group-bg:#2f435e;
+  --room:#c4d1e2;--gold:#e3bb79;--soft-gold:#342e25;--portal-shadow:0 13px 34px #0004;
+  --time-bg:#223249;--card-highlight:#ffffff08;--menu-tint:#1d2b3d;--portal-grid:#d0dded04
+}
+:root[data-palette="en"]{
+  --ink:#102759;--muted:#52678e;--line:#d9e2f1;--paper:#f3f6fc;--surface:#fff;
+  --controls:#f3f6fc;--header:#012169;--header-shade:#163b83;--burgundy:#c8102e;--red:#c8102e;
+  --focus:#c8102e;--button:#eaf0fa;--button-border:#d8e2f2;--button-hover:#dce7f8;
+  --selected:#012169;--selected-text:#fff;--rule:#ccd8ec;--card-edge:#b9c9e8;
+  --inclusive-edge:#315aa4;--inclusive-bg:#eaf1ff;--inclusive-ink:#163a7b;
+  --conflict-edge:#e4a9b2;--conflict-bg:#fff0f1;--conflict-ink:#9e1d34;
+  --tag:#e9eef8;--srsp-bg:#e8edf6;--srsp-ink:#263c68;--group-bg:#dce7fb;
+  --room:#324c7c;--gold:#5978b3;--soft-gold:#e6ecf8;--menu-tint:#f0f4fb;
+  --time-bg:#eaf0fb;--card-highlight:#fff;--portal-grid:#01216906
+}
+:root[data-palette="en"][data-theme="dark"]{
+  --ink:#edf3ff;--muted:#afbfdf;--line:#31476f;--paper:#09142b;--surface:#111f3d;
+  --controls:#0d1933;--header:#061a48;--header-shade:#153a78;--burgundy:#ef4054;--red:#ff5368;
+  --focus:#ff6678;--button:#1a2c50;--button-border:#314a78;--button-hover:#243b67;
+  --selected:#e7efff;--selected-text:#071a45;--rule:#2b4169;--card-edge:#3e5d95;
+  --inclusive-edge:#7399e4;--inclusive-bg:#152b53;--inclusive-ink:#d6e4ff;
+  --conflict-edge:#7c3c54;--conflict-bg:#321d31;--conflict-ink:#ffb8c4;
+  --tag:#20365e;--srsp-bg:#273455;--srsp-ink:#d7e2fa;--group-bg:#243d6b;
+  --room:#bdcff4;--gold:#91b2f1;--soft-gold:#1d3158;--menu-tint:#14264a;
+  --time-bg:#1a2d53;--card-highlight:#ffffff08;--portal-grid:#d5e3ff06
+}
+:root[data-palette="de"]{
+  --header:#171717;--header-shade:#2c2b28;--burgundy:#d10019;--red:#bd2631;--focus:#d10019;--selected:#242424;
+  --inclusive-edge:#b28b18;--inclusive-bg:#fbf3d7;--inclusive-ink:#66510f;
+  --gold:#e0b72f;--soft-gold:#f3e7b7;--menu-tint:#f8f4e8;--time-bg:#f3f0e6
+}
+:root[data-palette="de"][data-theme="dark"]{
+  --header:#101010;--header-shade:#282724;--burgundy:#e00020;--red:#ff9197;--selected:#f5ca39;--selected-text:#171717;
+  --inclusive-edge:#e2bd44;--inclusive-bg:#332d1a;--inclusive-ink:#f1dc91;
+  --gold:#f1cc4b;--soft-gold:#3b331c;--menu-tint:#24231e;--time-bg:#302d24
+}
+
+html{background:var(--paper);scroll-behavior:smooth}
+body{background-color:var(--paper);background-image:radial-gradient(var(--portal-grid) 1px,transparent 1px);background-size:12px 12px;color:var(--ink);font-size:15px;line-height:1.55}
+header{padding:24px 28px 28px;background:linear-gradient(125deg,var(--header),var(--header-shade));border:0;box-shadow:0 14px 34px #13294220}
+:root[data-palette="en"] header:after{background:linear-gradient(90deg,#c8102e 0 32%,#fff 32% 39%,#012169 39% 61%,#fff 61% 68%,#c8102e 68% 100%)}
+:root[data-palette="en"][data-theme="dark"] header:after{background:linear-gradient(90deg,#ef3340 0 32%,#fff 32% 39%,#012169 39% 61%,#fff 61% 68%,#ef3340 68% 100%)}
+header:after{height:4px;background:linear-gradient(90deg,var(--burgundy) 0 64%,var(--gold) 64% 82%,#f1eee6 82% 100%)}
+:root[data-palette="de"] header:after{background:linear-gradient(90deg,#090909 0 33.33%,#d10019 33.33% 66.66%,#f4c400 66.66% 100%)}
+header .inner{max-width:1120px}
+.header-top{margin-bottom:16px}
+.eyebrow{font-size:10px;letter-spacing:.2em;color:#d7e1ee}
+h1{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:clamp(34px,5vw,48px);letter-spacing:-.045em;font-weight:760}
+.subtitle{margin-top:8px;color:#c8d5e4;font-size:14px}
+.theme-toggle{min-height:42px;border-radius:999px;padding:8px 13px;background:#ffffff10;border-color:#ffffff35;box-shadow:none;font-size:12px}
+.theme-toggle:hover{background:#ffffff1c}
+.theme-track{width:31px;height:18px;background:#8292a6}
+.theme-toggle[aria-checked="true"] .theme-track{background:var(--burgundy)}
+.back-menu{min-height:40px;border:1px solid #ffffff30;border-radius:999px;padding:7px 12px;background:#ffffff0c}
+.appearance-selectors{max-width:620px;gap:12px;margin-top:19px}
+.appearance-select{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#d7e1ee}
+.language-select,.palette-select{min-height:44px;border-radius:10px;padding:9px 34px 9px 12px;background:#ffffff12;border-color:#ffffff32;font-size:13px}
+.language-select option,.palette-select option{background:#182c45;color:white}
+:root[data-palette="de"] .language-select,:root[data-palette="de"] .palette-select{background:#242321;color:#fff4d8}
+
+main{max-width:1120px;padding:30px 28px 56px}
+.home-shell{max-width:920px;padding-top:30px}
+.menu-caption{margin-bottom:15px;font-size:10px;letter-spacing:.16em}
+.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.menu-card{min-height:112px;padding:19px 20px;gap:15px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--portal-shadow)}
+.menu-card:before{inset-block:22px;width:3px;border-radius:0 4px 4px 0}
+.menu-card:after{width:95px;height:95px;right:-54px;top:-38px;opacity:.35}
+.menu-card:hover{background:var(--menu-tint);border-color:var(--card-edge)}
+.schedule-card,.game-card{grid-column:1/-1;min-height:126px}
+.schedule-card{border-top:1px solid var(--line);background:linear-gradient(110deg,var(--surface),var(--menu-tint))}
+.academic-calendar-card{grid-column:auto}
+.game-card{background:linear-gradient(115deg,var(--inclusive-bg),var(--surface))}
+.menu-symbol{width:48px;height:48px;border-radius:12px;box-shadow:none}
+.calendar-symbol{transform:none;border-radius:10px;font-size:21px}
+.calendar-symbol:before,.calendar-symbol:after{top:-12px}
+.menu-copy{gap:4px}
+.menu-copy strong{font-size:17px;letter-spacing:-.025em}
+.menu-copy>span{font-size:12px;line-height:1.45}
+.menu-copy small{font-size:10px;margin-top:1px}
+.menu-arrow{width:27px;height:27px;border-radius:50%;font-size:18px}
+.menu-footnote{max-width:none;margin-top:17px;padding-left:11px;font-size:11px}
+
+.control-wrap{background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 6px 22px #12223a09}
+.controls{max-width:1120px;padding:16px 28px;gap:13px}
+.control-row{gap:12px}
+.control-label{width:auto;min-width:100px;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.button-group{gap:6px}
+.choice{min-height:40px;padding:8px 13px;border:1px solid var(--button-border);border-radius:999px;background:var(--button);font-size:12px;font-weight:650}
+.choice[aria-pressed="true"]{background:var(--selected);border-color:var(--selected);color:var(--selected-text);box-shadow:0 3px 8px #12223a14}
+.choice[aria-pressed="true"]:after{content:"✓";display:inline-block;margin-left:6px;font-size:11px;font-weight:800;line-height:1}
+.choice.day[aria-pressed="true"]{background:var(--burgundy);border-color:var(--burgundy);color:#fff}
+.group-row{align-items:center;flex-direction:row;gap:12px}
+.group-row .control-label{width:auto;font-size:11px}
+.day-buttons .choice{min-width:48px}
+.assessment-notice{border-radius:12px;padding:10px 14px}
+
+.week{gap:28px 20px}
+.day-heading{gap:10px;margin-bottom:12px}
+.day-heading h2{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:16px;font-weight:750;letter-spacing:-.025em}
+.day-number{width:27px;height:27px;min-width:27px;min-height:27px;border:0;border-radius:9px;background:var(--time-bg);color:var(--muted);font-size:10px}
+.current-day-date,.assessment-day-date{border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:5px 9px;font-size:10px}
+.day-stack{position:relative;gap:10px}
+.lesson{grid-template-columns:67px minmax(0,1fr);gap:13px;padding:14px;border:1px solid var(--line);border-left:3px solid var(--card-edge);border-radius:14px;background:var(--surface);box-shadow:var(--portal-shadow)}
+.lesson.inclusive{border-left-color:var(--inclusive-edge);background:var(--inclusive-bg)}
+.lesson.conflict{border-left:3px solid var(--red);background:var(--conflict-bg)}
+.time{align-self:start;padding:8px 3px 7px;border:0;border-radius:9px;background:var(--time-bg);text-align:center;font-size:16px;letter-spacing:-.035em}
+.time .until{margin-top:3px;font-size:11px}
+.subject{margin:0 0 7px;font-size:14px;line-height:1.38;letter-spacing:-.015em}
+.tags{gap:5px;margin-bottom:6px}
+.tag{padding:3px 7px;border-radius:999px;font-size:9px;letter-spacing:.025em}
+.detail{margin-top:2px;font-size:11px;line-height:1.45}
+.room{margin-top:5px}
+.room:before{width:7px;height:8px}
+.conflict-note{margin-top:7px;padding-top:7px;font-size:11px}
+.empty{padding:20px 0}
+
+.academic-calendar{max-width:920px}
+.academic-summary,.academic-timeline li,.academic-session{border-radius:16px;box-shadow:var(--portal-shadow)}
+.academic-timeline li{padding:17px 19px}
+.academic-session{padding:20px}
+#jump-game .jg-stage{border-radius:16px}
+
+@media(hover:hover) and (pointer:fine){
+  .menu-card{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
+  .menu-card:hover{transform:translateY(-2px);box-shadow:0 16px 36px #14294317}
+  .lesson:hover{transform:translateY(-1px)}
+}
+@media(max-width:760px){
+  .home-shell{max-width:640px}
+  .menu-grid{grid-template-columns:1fr}
+  .schedule-card,.game-card{grid-column:auto;min-height:108px}
+  .academic-calendar-card{grid-column:auto}
+}
+@media(max-width:640px){
+  header{padding:18px 18px 23px}
+  .header-top{gap:8px;margin-bottom:13px}
+  h1{font-size:34px}
+  .subtitle{font-size:12px}
+  .appearance-selectors{gap:8px;margin-top:15px}
+  .appearance-select{font-size:9px;letter-spacing:.04em}
+  .language-select,.palette-select{font-size:14px;min-height:42px;padding:8px 27px 8px 9px}
+  .controls{padding:13px 16px;gap:11px}
+  .control-row{align-items:flex-start;flex-direction:column;gap:6px}
+  .control-label{min-width:0;font-size:9px}
+  .button-group{width:100%;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:1px 1px 5px;scrollbar-width:thin;scroll-snap-type:x proximity}
+  .choice{flex:0 0 auto;min-height:38px;padding:8px 12px;scroll-snap-align:start}
+  .day-buttons{display:flex;grid-template-columns:none}
+  .day-buttons .choice{min-width:45px;padding-inline:10px}
+  .group-row{flex-direction:column}
+  main{padding:22px 16px 40px}
+  .home-shell{padding-top:22px}
+  .menu-grid{gap:10px}
+  .menu-card{min-height:94px;padding:15px 15px;gap:12px;border-radius:14px}
+  .schedule-card,.game-card{min-height:100px}
+  .menu-symbol{width:42px;height:42px;font-size:23px}
+  .calendar-symbol{font-size:19px}
+  .menu-copy strong{font-size:16px}
+  .menu-copy>span{font-size:11px}
+  .menu-copy small{font-size:9px}
+  .menu-arrow{width:24px;height:24px;font-size:17px}
+  .menu-footnote{font-size:10px;margin-top:15px}
+  .week{grid-template-columns:1fr;gap:24px}
+  .day-heading{margin-bottom:10px}
+  .lesson{grid-template-columns:62px minmax(0,1fr);gap:11px;padding:12px}
+  .time{font-size:15px}
+  .subject{font-size:14px}
+  .detail{font-size:11px}
+  .academic-calendar{padding-top:20px}
+  body[data-screen="game"] header{padding-top:10px;padding-bottom:12px}
+}
+@media(max-width:355px){
+  header{padding-inline:14px}
+  .controls{padding-inline:12px}
+  .appearance-selectors{grid-template-columns:1fr 1fr;gap:6px}
+  .language-select,.palette-select{font-size:13px}
+  main{padding-inline:12px}
+  .menu-card{padding-inline:12px;gap:9px}
+  .menu-symbol{width:38px;height:38px}
+  .lesson{grid-template-columns:57px minmax(0,1fr);gap:9px;padding:10px}
+  .time{font-size:14px}
+}
+button,select{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:active,a:active{transform:scale(.975);transition:transform 90ms ease-out}
+@keyframes choice-selected{0%{transform:scale(.96)}55%{transform:scale(1.045)}100%{transform:scale(1)}}
+@keyframes selection-feedback{0%,100%{box-shadow:0 0 0 0 transparent}35%{box-shadow:0 0 0 4px var(--focus)}}
+@keyframes header-feedback{0%,100%{filter:none}35%{filter:brightness(1.22)}}
+.choice[aria-pressed="true"]{animation:choice-selected .34s cubic-bezier(.2,.8,.25,1) both}
+.language-select.selection-feedback,.palette-select.selection-feedback{animation:selection-feedback .42s ease-out}
+header.theme-feedback{animation:header-feedback .46s ease-out}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .menu-card,.lesson{transition:none!important}
+  .choice[aria-pressed="true"],.language-select.selection-feedback,.palette-select.selection-feedback,header.theme-feedback{animation:none!important}
+  .language-select.selection-feedback,.palette-select.selection-feedback{outline:3px solid var(--focus);outline-offset:2px}
+  button:active,a:active{transform:none}
+}
+@media print{header{box-shadow:none}.menu-card,.lesson{box-shadow:none}}
+
+</style>
 </head>
 <body data-screen="home">
   <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" data-i18n-aria-label="theme.dark" aria-label="Тёмная тема"><span class="theme-track" aria-hidden="true"></span><span data-i18n="theme.dark">Тёмная тема</span></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p><div class="appearance-selectors"><label class="appearance-select"><span data-i18n="language.label">Язык интерфейса</span><select id="language-select" class="language-select" data-i18n-aria-label="language.label" aria-label="Язык интерфейса"><option value="ru" data-i18n="language.ru">Русский</option><option value="en" data-i18n="language.en">Английский</option><option value="de" data-i18n="language.de">Немецкий</option></select></label><label class="appearance-select"><span data-i18n="palette.label">Цветовая тема</span><select id="palette-select" class="palette-select" data-i18n-aria-label="palette.label" aria-label="Цветовая тема"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option></select></label></div></div></header>
@@ -1266,5 +1488,29 @@ main{padding-bottom:calc(50px + env(safe-area-inset-bottom,0px))}
       window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js', {scope:'./', updateViaCache:'none'}).catch(() => {}), {once:true});
     }
   </script>
+<script id="design-selection-feedback">
+(() => {
+  const pulse = (element, className) => {
+    if (!element) return;
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+    const clear = () => element.classList.remove(className);
+    element.addEventListener('animationend', clear, { once: true });
+    window.setTimeout(clear, 650);
+  };
+  document.addEventListener('change', event => {
+    if (event.target.matches('.language-select, .palette-select')) {
+      pulse(event.target, 'selection-feedback');
+      pulse(document.querySelector('header'), 'theme-feedback');
+    }
+  });
+  document.addEventListener('click', event => {
+    if (event.target.closest('#theme-toggle')) pulse(document.querySelector('header'), 'theme-feedback');
+  });
+  window.addEventListener('palette:change', () => pulse(document.querySelector('header'), 'theme-feedback'));
+  window.addEventListener('language:change', () => pulse(document.querySelector('header'), 'theme-feedback'));
+})();
+</script>
 </body>
 </html>

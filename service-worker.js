@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'schedule-in251-pwa-2.3.5';
+const CACHE = 'schedule-in251-pwa-2.3.12';
 const SHELL = [
   './',
   './index.html',
