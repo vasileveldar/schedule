@@ -1,9 +1,11 @@
 'use strict';
 
-const CACHE = 'schedule-in251-pwa-2.3.12';
+const CACHE = 'schedule-in251-pwa-android-fork-0.1.0';
 const SHELL = [
   './',
   './index.html',
+  './android-fork.css',
+  './android-fork.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -34,7 +36,9 @@ self.addEventListener('fetch', event => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put('./index.html', response.clone()));
+        if (response.ok) caches.open(CACHE).then(cache => cache.put('./index.html',
+  './android-fork.css',
+  './android-fork.js', response.clone()));
         return response;
       }).catch(() => caches.open(CACHE).then(cache => cache.match('./index.html')))
     );

@@ -580,6 +580,7 @@ header.theme-feedback{animation:header-feedback .46s ease-out}
 @media print{header{box-shadow:none}.menu-card,.lesson{box-shadow:none}}
 
 </style>
+  <link rel="stylesheet" href="./android-fork.css">
 </head>
 <body data-screen="home">
   <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" data-i18n-aria-label="theme.dark" aria-label="Тёмная тема"><span class="theme-track" aria-hidden="true"></span><span data-i18n="theme.dark">Тёмная тема</span></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p><div class="appearance-selectors"><label class="appearance-select"><span data-i18n="language.label">Язык интерфейса</span><select id="language-select" class="language-select" data-i18n-aria-label="language.label" aria-label="Язык интерфейса"><option value="ru" data-i18n="language.ru">Русский</option><option value="en" data-i18n="language.en">Английский</option><option value="de" data-i18n="language.de">Немецкий</option></select></label><label class="appearance-select"><span data-i18n="palette.label">Цветовая тема</span><select id="palette-select" class="palette-select" data-i18n-aria-label="palette.label" aria-label="Цветовая тема"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option></select></label></div></div></header>
@@ -801,6 +802,7 @@ header.theme-feedback{animation:header-feedback .46s ease-out}
   function drawEvent(event){
     const inclusive=event.source==='added';
     const card=el('article','lesson'+(inclusive?' inclusive':'')+(event.conflict?' conflict':''));
+    card.dataset.day=event.day;card.dataset.start=clock(event.start);card.dataset.end=clock(event.end);card.dataset.subject=event.subject||'';card.dataset.teacher=event.teacher||'';card.dataset.room=event.room||'';
     const time=el('div','time',clock(event.start));time.append(el('span','until',clock(event.end)));card.append(time);
     const details=el('div','details'),tags=el('div','tags');
     if(event.conflict)tags.append(el('span','tag conflict-tag',t('schedule.conflict')));
@@ -831,7 +833,7 @@ header.theme-feedback{animation:header-feedback .46s ease-out}
     for(const day of shownDays){
       const events=currentEvents.filter(e=>e.day===day&&(state.group==='all'||!e.group||e.group==='Общее'||e.group===state.group)).sort((a,b)=>minute(a.start)-minute(b.start)||minute(a.end)-minute(b.end)||String(a.group||'').localeCompare(String(b.group||''),'ru'));
       if(!events.length&&state.day==='week')continue;
-      const section=el('section','day-section'),heading=el('div','day-heading');
+      const section=el('section','day-section'),heading=el('div','day-heading');section.dataset.day=day;
       const number=el('span','day-number',String(days.indexOf(day)+1).padStart(2,'0'));number.setAttribute('aria-hidden','true');heading.append(number,el('h2','',i18n.day(day)));section.append(heading);
       if(state.mode!=='rk1'&&day===currentScheduleDay()){
         const now=new Date(),locale={ru:'ru-RU',en:'en-GB',de:'de-DE'}[i18n.getLanguage()];
@@ -1512,5 +1514,6 @@ header.theme-feedback{animation:header-feedback .46s ease-out}
   window.addEventListener('language:change', () => pulse(document.querySelector('header'), 'theme-feedback'));
 })();
 </script>
+  <script src="./android-fork.js"></script>
 </body>
 </html>

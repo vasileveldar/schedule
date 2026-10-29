@@ -1,0 +1,69 @@
+.fork-next-card,
+.fork-reminders {
+  position: relative;
+  max-width: 1040px;
+  margin: 0 auto 14px;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--burgundy);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow, 0 3px 12px #182d4908);
+}
+.fork-next-label,
+.fork-reminder-copy span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.fork-next-subject {
+  display: block;
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.fork-next-time { margin-top: 4px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.fork-next-status { margin-top: 8px; color: var(--burgundy); font-size: 12px; font-weight: 700; }
+.fork-next-card.is-current { border-left-color: var(--red); }
+.fork-next-card.is-current .fork-next-status { color: var(--red); }
+.fork-reminders { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 0; }
+.fork-reminder-copy strong { display: block; color: var(--ink); font-size: 14px; }
+.fork-reminder-copy span { margin-top: 3px; font-weight: 550; letter-spacing: 0; text-transform: none; }
+.fork-switch { position: relative; display: inline-flex; flex: none; width: 46px; height: 27px; }
+.fork-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.fork-switch-track { width: 46px; height: 27px; border-radius: 20px; background: var(--button-border); transition: background .18s ease; }
+.fork-switch-track::after { position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px #0003; content: ""; transition: transform .18s ease; }
+.fork-switch input:checked + .fork-switch-track { background: var(--burgundy); }
+.fork-switch input:checked + .fork-switch-track::after { transform: translateX(19px); }
+.fork-switch input:focus-visible + .fork-switch-track { outline: 3px solid var(--focus); outline-offset: 3px; }
+.fork-search-tools { display: flex; justify-content: flex-end; margin: 0 0 5px; }
+.fork-search-toggle { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--muted); opacity: .72; cursor: pointer; }
+.fork-search-toggle:hover,
+.fork-search-toggle[aria-expanded="true"] { border-color: var(--line); background: var(--surface); opacity: 1; }
+.fork-search-toggle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.fork-search-panel { margin: 0 0 12px; }
+.fork-search-input { display: block; width: 100%; min-height: 43px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.fork-search-input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.fork-search-empty { padding: 10px 2px 14px; color: var(--muted); font-size: 13px; }
+.fork-search-panel[hidden],
+.fork-search-empty[hidden],
+.lesson[hidden],
+.day-section[hidden] { display: none !important; }
+.lesson.fork-current-lesson { border-color: var(--red); border-left-color: var(--red); background: linear-gradient(110deg, color-mix(in srgb, var(--red) 9%, var(--surface)), var(--surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--red) 18%, transparent), var(--shadow, 0 4px 14px #182d4910); }
+.lesson.fork-current-lesson .time { color: var(--red); }
+.lesson.fork-current-lesson .fork-current-tag { display: inline-flex; }
+.fork-current-tag { display: none; margin: 0 0 5px; padding: 3px 7px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 750; }
+@media (max-width: 640px) {
+  .fork-next-card,
+  .fork-reminders { padding: 13px 14px; }
+  .fork-next-subject { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fork-switch-track,
+  .fork-switch-track::after { transition: none; }
+}
