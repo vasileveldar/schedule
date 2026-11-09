@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'schedule-in251-pwa-android-fork-0.1.0';
+const CACHE = 'schedule-in251-pwa-android-fork-0.2.0';
 const SHELL = [
   './',
   './index.html',
@@ -33,18 +33,35 @@ self.addEventListener('fetch', event => {
   const scope = new URL(self.registration.scope);
   if (request.method !== 'GET' || url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return;
 
+  // Навигация (HTML): сначала сеть, при офлайне — кэш
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put('./index.html',
-  './android-fork.css',
-  './android-fork.js', response.clone()));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put('./index.html', copy));
+        }
         return response;
       }).catch(() => caches.open(CACHE).then(cache => cache.match('./index.html')))
     );
     return;
   }
 
+  // Для JS, CSS и манифеста тоже используем Network First, чтобы обновления в Telegram WebView применялись сразу
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.webmanifest')) {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put(request, copy));
+        }
+        return response;
+      }).catch(() => caches.open(CACHE).then(cache => cache.match(request)))
+    );
+    return;
+  }
+
+  // Иконки и статика: Cache First
   const shellUrls = SHELL.map(file => new URL(file, scope).href);
   if (!shellUrls.includes(url.href)) return;
   event.respondWith(

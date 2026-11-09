@@ -77,7 +77,6 @@
   function upcoming(now = new Date()) {
     const mode = currentMode();
     const events = mode === 'rk1' ? readJSON('assessment-data')?.events || [] : data.events;
-    const byDay = new Map(data.days.map((day,index) => [day,index]));
     const items = [];
     if (mode === 'rk1') {
       const assessment = readJSON('assessment-data');
@@ -260,10 +259,122 @@
     markCurrentLesson(now);
   }
 
+  // --- Интеграция Telegram Mini App (TMA) ---
+  function initTelegramBridge() {
+    const tg = window.Telegram?.WebApp;
+    if (!tg || !tg.initData) return; // Если открыто в обычном браузере — ничего не трогаем
+
+    document.documentElement.dataset.telegram = 'true';
+
+    // 1. Первичная инициализация клиента Telegram
+    tg.ready();
+    tg.expand();
+    if (typeof tg.isVersionAtLeast === 'function' && tg.isVersionAtLeast('7.7')) {
+      tg.disableVerticalSwipes();
+    }
+
+    // 2. Если пользователь ещё ни разу не выбирал тему вручную — подхватываем тему и язык из Telegram
+    try {
+      if (!localStorage.getItem('schedule-theme') && tg.colorScheme) {
+        document.documentElement.dataset.theme = tg.colorScheme === 'dark' ? 'dark' : 'light';
+        const toggle = document.getElementById('theme-toggle');
+        if (toggle) toggle.setAttribute('aria-checked', String(tg.colorScheme === 'dark'));
+      }
+      const userLang = tg.initDataUnsafe?.user?.language_code;
+      if (!localStorage.getItem('schedule-language') && ['ru', 'en', 'de'].includes(userLang) && window.scheduleI18n) {
+        window.scheduleI18n.setLanguage(userLang, false);
+      }
+    } catch (_) {}
+
+    // 3. Синхронизация цветов шапки и фона Telegram с палитрой приложения
+    const syncTelegramColors = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const headerColor = styles.getPropertyValue('--header').trim() || '#173458';
+      const paperColor = styles.getPropertyValue('--paper').trim() || '#f4f6fa';
+      try {
+        tg.setHeaderColor(headerColor);
+        tg.setBackgroundColor(paperColor);
+        if (typeof tg.setBottomBarColor === 'function') {
+          tg.setBottomBarColor(paperColor);
+        }
+      } catch (_) {}
+    };
+    syncTelegramColors();
+
+    // Следим за переключением темы, палитры и экранов
+    new MutationObserver(syncTelegramColors).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-palette']
+    });
+    window.addEventListener('palette:change', syncTelegramColors);
+
+    // 4. Подключаем нативную кнопку «Назад» в шапке Telegram
+    const syncBackButton = () => {
+      const screen = document.body.dataset.screen || 'home';
+      if (!tg.BackButton) return;
+      if (screen === 'home') {
+        tg.BackButton.hide();
+      } else {
+        tg.BackButton.show();
+      }
+    };
+    if (tg.BackButton) {
+      tg.BackButton.onClick(() => {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        if (typeof window.appNavigateBack === 'function') {
+          window.appNavigateBack();
+        }
+      });
+    }
+    new MutationObserver(syncBackButton).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['data-screen']
+    });
+    syncBackButton();
+
+    // 5. Открываем внешние ссылки (Moodle и Platonus) через нативный браузер Telegram
+    document.addEventListener('click', event => {
+      const link = event.target.closest('a[href^="http"]');
+      if (link && typeof tg.openLink === 'function') {
+        event.preventDefault();
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        tg.openLink(link.href, { try_instant_view: true });
+      }
+    });
+
+    // 6. Тактильная отдача (Haptic Feedback) на элементы управления
+    if (tg.HapticFeedback) {
+      document.addEventListener('click', event => {
+        if (event.target.closest('.choice, #theme-toggle, .fork-search-toggle')) {
+          tg.HapticFeedback.selectionChanged();
+        } else if (event.target.closest('.menu-card, #back-menu, #jg-primary, #jg-pause, .academic-open-assessment')) {
+          tg.HapticFeedback.impactOccurred('light');
+        }
+      });
+      document.addEventListener('change', event => {
+        if (event.target.matches('.language-select, .palette-select')) {
+          tg.HapticFeedback.selectionChanged();
+        }
+      });
+    }
+
+    // 7. Поддержка прямых ссылок с параметрами (например, ?startapp=schedule, ?startapp=rk1, ?startapp=game)
+    const startParam = tg.initDataUnsafe?.start_param || new URLSearchParams(location.search).get('startapp');
+    if (startParam && window.scheduleApp) {
+      if (['schedule', 'calendar', 'game'].includes(startParam)) {
+        window.scheduleApp.navigate(startParam, false);
+      } else if (startParam === 'rk1') {
+        document.querySelector('#schedule-modes [data-value="rk1"]')?.click();
+        window.scheduleApp.navigate('schedule', false);
+      }
+    }
+  }
+
   function start() {
     createNextCard();
     createSearch();
     createReminderControl();
+    initTelegramBridge();
     refresh();
     document.addEventListener('schedule:render',()=>{refresh();});
     window.addEventListener('language:change',refresh);
