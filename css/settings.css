@@ -23,3 +23,8 @@
 .settings-status { min-height: 18px; margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); }
 .settings-group .fork-reminders { margin: 0; padding: 4px 0; border: 0; background: none; box-shadow: none; }
 @media (max-width: 420px) { .settings-row { flex-wrap: wrap; } #settings-screen .language-select, #settings-screen .palette-select { width: 100%; max-width: none; } }
+
+.custom-controls { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+#custom-accent { width: 56px; height: 44px; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); cursor: pointer; }
+#mode-select:disabled { opacity: .55; }
+.settings-row[hidden], .settings-note[hidden] { display: none; }

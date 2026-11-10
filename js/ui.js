@@ -2,18 +2,7 @@
 'use strict';
 const i18n=window.scheduleI18n;
 const t=(key,params)=>i18n.t(key,params);
-const themeToggle=document.getElementById('theme-toggle');
-function applyTheme(theme){
-  document.documentElement.dataset.theme=theme;
-  themeToggle.setAttribute('aria-checked',String(theme==='dark'));
-  i18n.syncChrome();
-}
-applyTheme(document.documentElement.dataset.theme==='dark'?'dark':'light');
-themeToggle.addEventListener('click',()=>{
-  const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
-  applyTheme(next);
-  try{localStorage.setItem('schedule-theme',next);}catch(_){}
-});
+/* тема: см. theme.js */
 const data=JSON.parse(document.getElementById('schedule-data').textContent);
 const assessment=JSON.parse(document.getElementById('assessment-data').textContent);
 function currentScheduleDay(date=new Date()){
@@ -44,7 +33,7 @@ function minute(value){const [h,m]=String(value).split(':').map(Number);return h
 function drawEvent(event){
   const inclusive=event.source==='added';
   const card=el('article','lesson'+(inclusive?' inclusive':'')+(event.conflict?' conflict':''));
-  card.dataset.day=event.day;card.dataset.start=clock(event.start);card.dataset.end=clock(event.end);card.dataset.subject=event.subject||'';card.dataset.teacher=event.teacher||'';card.dataset.room=event.room||'';
+  card.dataset.day=event.day;card.dataset.start=clock(event.start);card.dataset.end=clock(event.end);card.dataset.subject=event.subject||'';card.dataset.teacher=event.teacher||'';card.dataset.room=event.room||'';card.dataset.group=event.group||'Общее';card.dataset.source=event.source||'';
   const time=el('div','time',clock(event.start));time.append(el('span','until',clock(event.end)));card.append(time);
   const details=el('div','details'),tags=el('div','tags');
   if(event.conflict)tags.append(el('span','tag conflict-tag',t('schedule.conflict')));

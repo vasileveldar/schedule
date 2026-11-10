@@ -15,9 +15,6 @@ document.addEventListener('change', event => {
     pulse(document.querySelector('header'), 'theme-feedback');
   }
 });
-document.addEventListener('click', event => {
-  if (event.target.closest('#theme-toggle')) pulse(document.querySelector('header'), 'theme-feedback');
-});
 window.addEventListener('palette:change', () => pulse(document.querySelector('header'), 'theme-feedback'));
 window.addEventListener('language:change', () => pulse(document.querySelector('header'), 'theme-feedback'));
 })();

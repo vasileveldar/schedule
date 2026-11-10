@@ -13,14 +13,15 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <title>Расписание ИН-25-1</title>
   <script>
-    try { if(localStorage.getItem('schedule-theme')==='dark') document.documentElement.dataset.theme='dark'; } catch(e){}
-    try {const palette=localStorage.getItem('schedule-palette');if(['en','de'].includes(palette))document.documentElement.dataset.palette=palette;} catch(e){}
+    try {var d=document.documentElement,ls=localStorage;var P=['en','de','sunset','forest','ocean','graphite','sakura','amoled','custom'],F={sunset:'dark',forest:'light',ocean:'light',graphite:'dark',sakura:'light'};var p=ls.getItem('schedule-palette');if(P.indexOf(p)>=0)d.dataset.palette=p;var css=ls.getItem('schedule-custom-css');if(css&&p==='custom'){var st=document.createElement('style');st.id='custom-theme-style';st.textContent=css;document.head.appendChild(st);}var m=ls.getItem('schedule-mode')||(ls.getItem('schedule-theme')==='dark'?'dark':'light');var sys=false;try{sys=window.AppPreferences&&window.AppPreferences.isSystemDark?!!window.AppPreferences.isSystemDark():!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}catch(e){}var dark=F[p]?F[p]==='dark':(m==='dark'||(m==='system'&&sys));if(dark)d.dataset.theme='dark';} catch(e){}
     try {const language=localStorage.getItem('schedule-language')||(window.AppPreferences&&window.AppPreferences.getLocale());if(['ru','en','de'].includes(language)){document.documentElement.dataset.language=language;document.documentElement.lang=language;}if(!localStorage.getItem('schedule-palette')&&document.documentElement.dataset.language==='de')document.documentElement.dataset.palette='de';} catch(e){}
   </script>
 <link rel="stylesheet" href="./css/base.css">
 <link rel="stylesheet" href="./css/design.css">
 <link rel="stylesheet" href="./css/android.css">
+<link rel="stylesheet" href="./css/themes.css">
 <link rel="stylesheet" href="./css/settings.css">
+<link rel="stylesheet" href="./css/homework.css">
 </head>
 <body data-screen="home">
   <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
@@ -45,6 +46,11 @@
       </a>
       <button class="menu-card game-card" type="button" data-open-screen="game">
         <span class="menu-symbol jump-symbol" aria-hidden="true">↑</span><span class="menu-copy"><strong data-i18n="nav.game">Выше пары</strong><span data-i18n="menu.gameDetails">Прыжки, пружины и ракетный ранец</span><small data-i18n="menu.gameHint">Игра для короткого перерыва</small></span><span class="menu-arrow" aria-hidden="true">›</span>
+      </button>
+      <button class="menu-card homework-menu-card" id="hw-menu-card" type="button" data-open-screen="homework" hidden>
+        <span class="menu-symbol platform-symbol" aria-hidden="true">✎</span>
+        <span class="menu-copy"><strong data-i18n="nav.homework">Домашние задания</strong><span data-i18n="hw.menuDetails">Добавить и изменить задания к парам</span></span>
+        <span class="menu-arrow" aria-hidden="true">›</span>
       </button>
       <button class="menu-card settings-menu-card" type="button" data-open-screen="settings">
         <span class="menu-symbol platform-symbol" aria-hidden="true">⚙</span>
@@ -113,15 +119,19 @@
   <p class="jg-help" data-i18n="game.help">Удерживайте стрелки или ведите пальцем по полю.</p>
 </div>
 </main>
+  <main id="homework-screen" class="homework-shell" hidden data-i18n-aria-label="nav.homework" aria-label="Домашние задания"></main>
   <main id="settings-screen" class="settings-shell" hidden data-i18n-aria-label="nav.settings" aria-label="Настройки">
     <section class="settings-group" aria-labelledby="settings-appearance-title">
       <h2 id="settings-appearance-title" data-i18n="settings.appearance">Оформление</h2>
       <div class="settings-row"><label for="language-select" data-i18n="language.label">Язык интерфейса</label>
         <select id="language-select" class="language-select"><option value="ru" data-i18n="language.ru">Русский</option><option value="en" data-i18n="language.en">Английский</option><option value="de" data-i18n="language.de">Немецкий</option></select></div>
       <div class="settings-row"><label for="palette-select" data-i18n="palette.label">Цветовая тема</label>
-        <select id="palette-select" class="palette-select"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option></select></div>
-      <div class="settings-row"><span id="theme-label" data-i18n="settings.mode">Режим</span>
-        <button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-label theme-text"><span class="theme-track" aria-hidden="true"></span><span id="theme-text" data-i18n="theme.dark">Тёмная тема</span></button></div>
+        <select id="palette-select" class="palette-select"><optgroup label="Классика" data-i18n-label="palette.group.classic"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option><option value="amoled" data-i18n="palette.amoled">AMOLED</option></optgroup><optgroup label="Готовые" data-i18n-label="palette.group.ready"><option value="sunset" data-i18n="palette.sunset">Закат</option><option value="forest" data-i18n="palette.forest">Лес</option><option value="ocean" data-i18n="palette.ocean">Океан</option><option value="graphite" data-i18n="palette.graphite">Графит</option><option value="sakura" data-i18n="palette.sakura">Сакура</option></optgroup><optgroup label="Своя" data-i18n-label="palette.group.own"><option value="custom" data-i18n="palette.custom">Своя тема</option></optgroup></select></div>
+      <div class="settings-row" id="mode-row"><label for="mode-select" data-i18n="settings.mode">Режим</label>
+        <select id="mode-select" class="language-select"><option value="light" data-i18n="mode.light">Светлый</option><option value="dark" data-i18n="mode.dark">Тёмный</option><option value="system" data-i18n="mode.system">Как в системе</option></select></div>
+      <p class="settings-note" id="mode-note" data-i18n="settings.modeFixed" hidden>У этой темы свой фиксированный вид: светлый и тёмный режим не переключаются.</p>
+      <div class="settings-row" id="custom-row" hidden><label for="custom-accent" data-i18n="settings.customColor">Основной цвет</label>
+        <span class="custom-controls"><input type="color" id="custom-accent" value="#3d6dcc" aria-label="Основной цвет"><button type="button" id="custom-reset" class="choice" data-i18n="settings.customReset">Сбросить</button></span></div>
     </section>
     <section class="settings-group" id="notify-settings" aria-labelledby="settings-notify-title" hidden>
       <h2 id="settings-notify-title" data-i18n="settings.notifications">Уведомления</h2>

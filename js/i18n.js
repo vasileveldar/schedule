@@ -2,7 +2,7 @@
 'use strict';
 const catalogue=JSON.parse(document.getElementById('translation-data').textContent);
 const valid=['ru','en','de'];
-const palettes=['en','de'];
+const palettes=['en','de','sunset','forest','ocean','graphite','sakura','amoled','custom'];
 let language=valid.includes(document.documentElement.dataset.language)?document.documentElement.dataset.language:'ru';
 let palette=palettes.includes(document.documentElement.dataset.palette)?document.documentElement.dataset.palette:'en';
 let hasSavedPalette=palettes.includes(document.documentElement.dataset.palette);
@@ -32,6 +32,7 @@ function room(value) {
 }
 function applyStatic(scope=document) {
   scope.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=t(node.dataset.i18n));
+  scope.querySelectorAll('[data-i18n-label]').forEach(node=>node.setAttribute('label',t(node.getAttribute('data-i18n-label'))));
   for(const attr of ['aria-label','title'])scope.querySelectorAll('[data-i18n-'+attr+']').forEach(node=>node.setAttribute(attr,t(node.getAttribute('data-i18n-'+attr))));
   const languageSelect=scope.querySelector?.('#language-select');
   if(languageSelect)languageSelect.value=language;

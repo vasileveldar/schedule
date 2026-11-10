@@ -1,9 +1,10 @@
 ﻿/* Загрузчик: подтягивает данные (data/*.json), затем подключает скрипты приложения по порядку. */
 (function () {
   'use strict';
-  var APP_SCRIPTS = ['js/i18n.js', 'js/ui.js', 'js/game.js', 'js/motion.js', 'js/navigation.js', 'js/feedback.js', 'js/android.js']; /*SCRIPTS*/
+  var APP_SCRIPTS = ['js/i18n.js', 'js/theme.js', 'js/ui.js', 'js/game.js', 'js/motion.js', 'js/navigation.js', 'js/homework.js', 'js/feedback.js', 'js/android.js']; /*SCRIPTS*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
   var CACHE_KEY = 'schedule-json-cache';
+  var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
 
   function put(id, text) {
     var s = document.createElement('script');
@@ -55,6 +56,8 @@
     getText(DATA['translation-data'])
   ]).then(function (r) {
     put('schedule-data', r[0]); put('assessment-data', r[1]); put('translation-data', r[2]);
+    return getText(OPTIONAL['app-config']).then(function (t) { JSON.parse(t); put('app-config', t); }, function () { put('app-config', '{}'); });
+  }).then(function () {
     return APP_SCRIPTS.reduce(function (p, src) { return p.then(function () { return load(src); }); }, Promise.resolve());
   }).catch(fail);
 

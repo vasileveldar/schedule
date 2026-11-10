@@ -10,6 +10,7 @@
     if (!tg) return;
     document.documentElement.classList.add('in-telegram');
     try { tg.ready(); tg.expand(); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('telegram:ready'));
     function sync() {
       var bg = getComputedStyle(document.body).backgroundColor;
       var m = bg.match(/\d+/g);

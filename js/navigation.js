@@ -1,7 +1,7 @@
 (() => {
-const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen')};
-const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings'};
-const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings'};
+const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen'),homework:document.getElementById('homework-screen')};
+const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings',homework:'nav.homework'};
+const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings',homework:'nav.openedHomework'};
 const heading=document.getElementById('page-title');
 const back=document.getElementById('back-menu');
 const eyebrow=document.getElementById('header-eyebrow');

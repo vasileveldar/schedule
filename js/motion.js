@@ -4,7 +4,7 @@ const animations = new Set();
 const reveals = new Set();
 const elementAnimations = new WeakMap();
 const easing = 'cubic-bezier(.2,.75,.25,1)';
-const actionable = '.menu-card, #theme-toggle, .choice, .language-select, .palette-select, #back-menu, #jump-game .jg-primary, #jump-game .jg-pause';
+const actionable = '.menu-card, .choice, .language-select, .palette-select, #back-menu, #jump-game .jg-primary, #jump-game .jg-pause';
 
 function visible(element) {
   return element && element.isConnected && !element.closest('[hidden]') && document.visibilityState !== 'hidden';
