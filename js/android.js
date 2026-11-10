@@ -8,6 +8,9 @@
       search: 'Поиск по расписанию', searchPlaceholder: 'Предмет, преподаватель или аудитория',
       searchEmpty: 'Совпадений не найдено. Измените запрос.', current: 'Сейчас',
       reminder: 'Напоминать о парах', reminderHint: 'Уведомление за 5 минут до начала пары',
+      testBtn: 'Проверить уведомление', testSent: 'Отправлено. Посмотрите шторку уведомлений.',
+      testPermission: 'Разрешите уведомления в окне Android — проверка отправится сама.',
+      testBlocked: 'Уведомления отключены. Включите их в настройках Android для этого приложения.',
       weekdays: ['понедельник','вторник','среду','четверг','пятницу','субботу','воскресенье'],
       dayIn: 'Следующая пара: {day}, {date}',
     },
@@ -17,6 +20,9 @@
       search: 'Search timetable', searchPlaceholder: 'Subject, teacher, or room',
       searchEmpty: 'No matches. Try another search.', current: 'Now',
       reminder: 'Class reminders', reminderHint: 'Notification 5 minutes before class',
+      testBtn: 'Send test notification', testSent: 'Sent. Check your notification shade.',
+      testPermission: 'Allow notifications in the Android prompt — the test will be sent automatically.',
+      testBlocked: 'Notifications are turned off. Enable them for this app in Android settings.',
       weekdays: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
       dayIn: 'Next class: {day}, {date}',
     },
@@ -26,6 +32,9 @@
       search: 'Stundenplan durchsuchen', searchPlaceholder: 'Fach, Lehrkraft oder Raum',
       searchEmpty: 'Keine Treffer. Bitte Suche ändern.', current: 'Jetzt',
       reminder: 'Stundenerinnerungen', reminderHint: 'Benachrichtigung 5 Minuten vor Beginn',
+      testBtn: 'Test-Benachrichtigung senden', testSent: 'Gesendet. Schauen Sie in die Benachrichtigungen.',
+      testPermission: 'Erlauben Sie Benachrichtigungen im Android-Dialog — der Test wird automatisch gesendet.',
+      testBlocked: 'Benachrichtigungen sind deaktiviert. Aktivieren Sie sie in den Android-Einstellungen.',
       weekdays: ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'],
       dayIn: 'Nächste Stunde: {day}, {date}',
     },
@@ -215,9 +224,11 @@
 
   function createReminderControl() {
     const bridge = window.AppPreferences;
-    const home = document.getElementById('home-screen');
-    if (!bridge || typeof bridge.setClassNotifications !== 'function' || !home) return;
-    const card = make('section', 'fork-reminders');
+    const box = document.getElementById('notify-settings');
+    if (!bridge || typeof bridge.setClassNotifications !== 'function' || !box) return;
+    box.hidden = false;
+
+    const card = make('div', 'fork-reminders');
     const copy = make('div', 'fork-reminder-copy');
     const title = make('strong', '', t('reminder'));
     const hint = make('span', '', t('reminderHint'));
@@ -230,25 +241,41 @@
     const track = make('span', 'fork-switch-track');
     label.append(input, track);
     card.append(copy, label);
-    const next = home.querySelector('.fork-next-card');
-    if (next) next.after(card); else home.insertBefore(card, home.querySelector('.menu-grid'));
+
+    const testButton = make('button', 'choice settings-test', t('testBtn'));
+    testButton.type = 'button';
+    const status = make('p', 'settings-status');
+    status.setAttribute('aria-live', 'polite');
+    let lastResult = '';
+    const showResult = result => {
+      lastResult = result;
+      status.textContent = result === 'sent' ? t('testSent') : result === 'permission' ? t('testPermission') : result === 'blocked' ? t('testBlocked') : '';
+    };
+    box.append(card, testButton, status);
+
     try { input.checked = bridge.isClassNotificationsEnabled(); } catch (_) { input.checked = false; }
     input.addEventListener('change', () => {
       try { bridge.setClassNotifications(reminderPayload(), input.checked, language()); }
       catch (_) { input.checked = !input.checked; }
     });
+    testButton.addEventListener('click', () => {
+      if (typeof bridge.testNotification !== 'function') return;
+      try { showResult(String(bridge.testNotification(language()))); } catch (_) { showResult('blocked'); }
+    });
     window.scheduleNotifications = {
       onNativePermissionChanged(granted) {
         input.checked = Boolean(granted);
-      }
+      },
+      onTestResult(result) { showResult(String(result)); }
     };
     window.addEventListener('language:change', () => {
       title.textContent = t('reminder');
       hint.textContent = t('reminderHint');
+      testButton.textContent = t('testBtn');
       input.setAttribute('aria-label', t('reminder'));
+      if (lastResult) showResult(lastResult);
     });
   }
-
   function markCurrentLesson(now = new Date()) {
     const day = data.days[(now.getDay() + 6) % 7];
     const minutes = now.getHours() * 60 + now.getMinutes();

@@ -1,0 +1,25 @@
+﻿/* Экран «Настройки» (язык, палитра, тема, уведомления) */
+.settings-shell { max-width: 640px; margin: 0 auto; padding: 22px 16px 40px; }
+.settings-group { margin: 0 0 18px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.settings-group[hidden] { display: none; }
+.settings-group h2 { margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 48px; padding: 6px 0; }
+.settings-row + .settings-row { border-top: 1px solid var(--line); }
+.settings-row > label, .settings-row > span:first-child { flex: 1 1 auto; min-width: 0; color: var(--ink); font-size: 15px; font-weight: 600; }
+#settings-screen .language-select, #settings-screen .palette-select {
+  flex: 0 0 auto; width: 52%; max-width: 230px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--paper); color: var(--ink); font-size: 15px; font-weight: 600;
+}
+#settings-screen .language-select option, #settings-screen .palette-select option { background: var(--surface); color: var(--ink); }
+#settings-screen .theme-toggle {
+  flex: 0 0 auto; min-height: 44px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--paper); color: var(--ink); font-size: 14px; font-weight: 600;
+}
+#settings-screen .theme-toggle:hover { background: var(--paper); }
+#settings-screen .theme-track { background: var(--button-border, #aab4c3); }
+#settings-screen .theme-toggle[aria-checked="true"] .theme-track { background: var(--burgundy, #af516f); }
+.settings-note { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.settings-test { width: 100%; min-height: 46px; margin-top: 8px; }
+.settings-status { min-height: 18px; margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.settings-group .fork-reminders { margin: 0; padding: 4px 0; border: 0; background: none; box-shadow: none; }
+@media (max-width: 420px) { .settings-row { flex-wrap: wrap; } #settings-screen .language-select, #settings-screen .palette-select { width: 100%; max-width: none; } }

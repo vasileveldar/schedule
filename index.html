@@ -20,9 +20,10 @@
 <link rel="stylesheet" href="./css/base.css">
 <link rel="stylesheet" href="./css/design.css">
 <link rel="stylesheet" href="./css/android.css">
+<link rel="stylesheet" href="./css/settings.css">
 </head>
 <body data-screen="home">
-  <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" data-i18n-aria-label="theme.dark" aria-label="Тёмная тема"><span class="theme-track" aria-hidden="true"></span><span data-i18n="theme.dark">Тёмная тема</span></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p><div class="appearance-selectors"><label class="appearance-select"><span data-i18n="language.label">Язык интерфейса</span><select id="language-select" class="language-select" data-i18n-aria-label="language.label" aria-label="Язык интерфейса"><option value="ru" data-i18n="language.ru">Русский</option><option value="en" data-i18n="language.en">Английский</option><option value="de" data-i18n="language.de">Немецкий</option></select></label><label class="appearance-select"><span data-i18n="palette.label">Цветовая тема</span><select id="palette-select" class="palette-select" data-i18n-aria-label="palette.label" aria-label="Цветовая тема"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option></select></label></div></div></header>
+  <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
   <main id="home-screen" class="home-shell" data-i18n-aria-label="nav.home" aria-label="Главное меню">
     <p class="menu-caption" data-i18n="menu.caption">Всё для учебного дня</p>
     <div class="menu-grid">
@@ -45,7 +46,11 @@
       <button class="menu-card game-card" type="button" data-open-screen="game">
         <span class="menu-symbol jump-symbol" aria-hidden="true">↑</span><span class="menu-copy"><strong data-i18n="nav.game">Выше пары</strong><span data-i18n="menu.gameDetails">Прыжки, пружины и ракетный ранец</span><small data-i18n="menu.gameHint">Игра для короткого перерыва</small></span><span class="menu-arrow" aria-hidden="true">›</span>
       </button>
-    </div>
+      <button class="menu-card settings-menu-card" type="button" data-open-screen="settings">
+        <span class="menu-symbol platform-symbol" aria-hidden="true">⚙</span>
+        <span class="menu-copy"><strong data-i18n="nav.settings">Настройки</strong><span data-i18n="menu.settingsDetails">Язык, тема, уведомления</span></span>
+        <span class="menu-arrow" aria-hidden="true">›</span>
+      </button>    </div>
     <p class="menu-footnote" data-i18n="menu.footnote">Moodle и Platonus открываются в браузере и требуют интернета.</p>
   </main>
   <section id="schedule-screen" hidden data-i18n-aria-label="nav.schedule" aria-label="Расписание">
@@ -108,7 +113,20 @@
   <p class="jg-help" data-i18n="game.help">Удерживайте стрелки или ведите пальцем по полю.</p>
 </div>
 </main>
-  <p id="screen-status" class="day-status" aria-live="polite"></p>
+  <main id="settings-screen" class="settings-shell" hidden data-i18n-aria-label="nav.settings" aria-label="Настройки">
+    <section class="settings-group" aria-labelledby="settings-appearance-title">
+      <h2 id="settings-appearance-title" data-i18n="settings.appearance">Оформление</h2>
+      <div class="settings-row"><label for="language-select" data-i18n="language.label">Язык интерфейса</label>
+        <select id="language-select" class="language-select"><option value="ru" data-i18n="language.ru">Русский</option><option value="en" data-i18n="language.en">Английский</option><option value="de" data-i18n="language.de">Немецкий</option></select></div>
+      <div class="settings-row"><label for="palette-select" data-i18n="palette.label">Цветовая тема</label>
+        <select id="palette-select" class="palette-select"><option value="en" data-i18n="palette.en">Английская</option><option value="de" data-i18n="palette.de">Немецкая</option></select></div>
+      <div class="settings-row"><span id="theme-label" data-i18n="settings.mode">Режим</span>
+        <button id="theme-toggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-labelledby="theme-label theme-text"><span class="theme-track" aria-hidden="true"></span><span id="theme-text" data-i18n="theme.dark">Тёмная тема</span></button></div>
+    </section>
+    <section class="settings-group" id="notify-settings" aria-labelledby="settings-notify-title" hidden>
+      <h2 id="settings-notify-title" data-i18n="settings.notifications">Уведомления</h2>
+    </section>
+  </main>  <p id="screen-status" class="day-status" aria-live="polite"></p>
   <p id="language-status" class="day-status" aria-live="polite"></p><p id="palette-status" class="day-status" aria-live="polite"></p>
   <noscript><p class="noscript" lang="ru">Для просмотра расписания включите JavaScript в браузере.</p><p class="noscript" lang="en">Enable JavaScript in your browser to view the timetable.</p><p class="noscript" lang="de">Aktivieren Sie JavaScript in Ihrem Browser, um den Stundenplan anzuzeigen.</p></noscript>
 <script src="./js/telegram.js"></script>
