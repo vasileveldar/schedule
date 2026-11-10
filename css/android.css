@@ -67,3 +67,25 @@
   .fork-switch-track,
   .fork-switch-track::after { transition: none; }
 }
+
+/* ---- v0.1.1 ---- */
+
+/* iOS standalone PWA (black-translucent status bar): the page runs under the Dynamic Island / status bar.
+   The earlier env(safe-area-inset-*) padding was overridden by later `header{padding:...}` shorthands, so the
+   inset is added as a spacer that no padding rule can cancel. It is 0 in browsers and in the Android WebView. */
+header::before {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-top, 0px);
+}
+main::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* Timetable mode switch is removed; RK1 can only be opened from the academic calendar. */
+.mode-row { display: none !important; }
+.assessment-banner:not([hidden]) { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.assessment-banner .assessment-notice { align-self: stretch; }
+.assessment-exit { min-height: 40px; }
