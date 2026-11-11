@@ -24,10 +24,12 @@
 <link rel="stylesheet" href="./css/homework.css">
 <link rel="stylesheet" href="./css/home.css">
 <link rel="stylesheet" href="./css/arcade.css">
+<link rel="stylesheet" href="./css/editor.css">
 </head>
 <body data-screen="home">
   <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="open-settings" class="settings-btn" type="button" data-open-screen="settings" data-i18n-aria-label="nav.settings" data-i18n-title="nav.settings" aria-label="Настройки" title="Настройки"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.7 7.7 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4z"/></svg></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
   <main id="home-screen" class="home-shell" data-i18n-aria-label="nav.home" aria-label="Главное меню">
+    <div id="home-skeleton" aria-hidden="true"><div class="skel card"></div></div>
     <div class="menu-grid">
       <button class="menu-card schedule-card" type="button" data-open-screen="schedule">
         <span class="menu-symbol calendar-symbol" aria-hidden="true">25</span>

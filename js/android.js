@@ -13,6 +13,7 @@
       testBlocked: 'Уведомления отключены. Включите их в настройках Android для этого приложения.',
       weekdays: ['понедельник','вторник','среду','четверг','пятницу','субботу','воскресенье'],
       dayIn: 'Следующая пара: {day}, {date}',
+      dayLine: 'Сегодня: {total} · осталось: {left} · конец в {end}', dayGap: 'Сейчас окно · осталось пар: {left} · конец в {end}', dayOver: 'Сегодня пары закончились (всего {total})', dayNone: 'Сегодня пар нет',
     },
     en: {
       next: 'Next class', now: 'In progress', today: 'Today', noClass: 'No upcoming classes',
@@ -25,6 +26,7 @@
       testBlocked: 'Notifications are turned off. Enable them for this app in Android settings.',
       weekdays: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
       dayIn: 'Next class: {day}, {date}',
+      dayLine: 'Today: {total} · left: {left} · ends at {end}', dayGap: 'Break now · classes left: {left} · ends at {end}', dayOver: 'Classes are over for today ({total} total)', dayNone: 'No classes today',
     },
     de: {
       next: 'Nächste Unterrichtsstunde', now: 'Findet gerade statt', today: 'Heute', noClass: 'Keine weiteren Stunden',
@@ -37,6 +39,7 @@
       testBlocked: 'Benachrichtigungen sind deaktiviert. Aktivieren Sie sie in den Android-Einstellungen.',
       weekdays: ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'],
       dayIn: 'Nächste Stunde: {day}, {date}',
+      dayLine: 'Heute: {total} · noch: {left} · Ende um {end}', dayGap: 'Gerade Pause · noch {left} · Ende um {end}', dayOver: 'Heute ist Schluss ({total} insgesamt)', dayNone: 'Heute keine Stunden',
     },
   };
 
@@ -86,7 +89,9 @@
         if (event.day !== day || !groupMatches(event)) continue;
         const start = new Date(date); start.setMinutes(timeMinutes(event.start));
         const end = new Date(date); end.setMinutes(timeMinutes(event.end));
-        if (end > now) items.push({ event, start, end });
+        if (end <= now) continue;
+        if (window.scheduleOverrides && window.scheduleOverrides.cancelled(event, date)) continue; // пара отменена на эту дату
+        items.push({ event, start, end });
       }
     }
     return items.sort((a, b) => a.start - b.start || a.end - b.end || String(a.event.group || '').localeCompare(String(b.event.group || '')));
@@ -101,7 +106,7 @@
     return `${minutes} мин`;
   }
 
-  let nextCard, nextLabel, nextSubject, nextTime, nextStatus;
+  let nextCard, nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar;
   function createNextCard() {
     const home = document.getElementById('home-screen');
     const menu = home?.querySelector('.menu-grid');
@@ -112,7 +117,9 @@
     nextSubject = make('strong', 'fork-next-subject');
     nextTime = make('div', 'fork-next-time');
     nextStatus = make('div', 'fork-next-status');
-    nextCard.append(nextLabel, nextSubject, nextTime, nextStatus);
+    dayText = make('div', 'fork-day-text');
+    dayBar = make('div', 'fork-day-bar'); dayBar.setAttribute('aria-hidden', 'true');
+    nextCard.append(nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar);
     home.insertBefore(nextCard, menu);
   }
 
@@ -132,7 +139,8 @@
     nextCard.classList.toggle('is-current', Boolean(active));
     nextLabel.textContent = active ? t('now') : t('next');
     nextSubject.textContent = item.event.subject;
-    nextTime.textContent = `${item.event.start}–${item.event.end}${item.event.room ? ` · ${item.event.room}` : ''}`;
+    const room = (window.scheduleOverrides && window.scheduleOverrides.roomFor(item.event, item.start)) || item.event.room;
+    nextTime.textContent = `${item.event.start}–${item.event.end}${room ? ` · ${room}` : ''}`;
     if (active) {
       const next = entries.find(candidate => candidate.start >= item.end);
       nextStatus.textContent = next ? replace(t('starts'), { time: countdown(next.start - now) }) : replace(t('ends'), { time: countdown(item.end - now) });
@@ -145,6 +153,38 @@
     }
   }
 
+  // Полоса дня: сколько пар сегодня, сколько осталось, во сколько конец; шкала времени с пройденными и оставшимися парами
+  function todaySlots(now) {
+    const day = data.days[(now.getDay() + 6) % 7];
+    const map = new Map();
+    for (const event of data.events) {
+      if (event.day !== day || !groupMatches(event) || !event.start || !event.end) continue;
+      if (window.scheduleOverrides && window.scheduleOverrides.cancelled(event, now)) continue;
+      const key = event.start + '|' + event.end;
+      if (!map.has(key)) map.set(key, { s: timeMinutes(event.start), e: timeMinutes(event.end), end: event.end });
+    }
+    return [...map.values()].sort((a, b) => a.s - b.s || a.e - b.e);
+  }
+  function renderDay(now = new Date()) {
+    if (!dayText) return;
+    const slots = todaySlots(now);
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    dayBar.replaceChildren();
+    dayBar.hidden = !slots.length;
+    if (!slots.length) { dayText.textContent = t('dayNone'); return; }
+    const left = slots.filter(slot => slot.e > minutes);
+    const current = slots.some(slot => slot.s <= minutes && slot.e > minutes);
+    const values = { total: slots.length, left: left.length, end: slots[slots.length - 1].end.replace(/^(\d):/, '0$1:') };
+    dayText.textContent = replace(t(!left.length ? 'dayOver' : current || !slots.some(slot => slot.e <= minutes) ? 'dayLine' : 'dayGap'), values);
+    const from = slots[0].s, span = Math.max(1, slots[slots.length - 1].e - from);
+    for (const slot of slots) {
+      const part = make('i', 'fork-day-part ' + (slot.e <= minutes ? 'done' : slot.s <= minutes ? 'now' : 'next'));
+      part.style.left = ((slot.s - from) / span * 100) + '%';
+      part.style.width = ((slot.e - slot.s) / span * 100) + '%';
+      dayBar.append(part);
+    }
+    if (minutes >= from && minutes <= from + span) { const pin = make('b', 'fork-day-pin'); pin.style.left = ((minutes - from) / span * 100) + '%'; dayBar.append(pin); }
+  }
   function createSearch() {
     const main = document.querySelector('#schedule-screen > main');
     const schedule = document.getElementById('schedule');
@@ -205,7 +245,8 @@
       const id = [weekday, event.start, event.subject, group, event.room || ''].join('|');
       if (seen.has(id)) continue;
       seen.add(id);
-      items.push({ id, weekday, start: event.start, end: event.end || '', subject: event.subject || '', room: event.room || '', group, semesterEnd });
+      const key = [event.day, String(event.start).replace(/^(\d):/, '0$1:'), event.subject, group || 'Общее'].join('|'); // ключ пары (как в облаке): по нему находятся отмены и замены
+      items.push({ id, weekday, start: event.start, end: event.end || '', subject: event.subject || '', room: event.room || '', group, semesterEnd, key });
     }
     return JSON.stringify(items);
   }
@@ -308,6 +349,7 @@
     const now = new Date();
     followToday(now);
     renderNext(now);
+    renderDay(now);
     markCurrentLesson(now);
   }
 
@@ -318,6 +360,7 @@
     refresh();
     syncReminders(true);
     document.addEventListener('schedule:render', () => { refresh(); syncReminders(false); });
+    document.addEventListener('overrides:change', () => { refresh(); syncReminders(false); });
     window.addEventListener('language:change', () => { refresh(); syncReminders(false); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
     window.addEventListener('focus', refresh);

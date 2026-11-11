@@ -69,6 +69,16 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 #home-screen .fork-next-time { margin-top: 2px; font-size: 12px; }
 #home-screen .fork-next-status { margin-top: 4px; font-size: 12px; }
 
+/* полоса дня внутри карточки «Следующая пара» */
+.fork-day-text { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 600; }
+.fork-day-bar { position: relative; height: 8px; margin-top: 7px; border-radius: 999px; background: color-mix(in srgb, var(--line) 55%, transparent); }
+.fork-day-bar[hidden] { display: none; }
+.fork-day-part { position: absolute; top: 0; bottom: 0; min-width: 4px; border-radius: 999px; box-sizing: border-box; border: 1px solid var(--card-edge, var(--muted)); background: transparent; }
+.fork-day-part.done { background: var(--muted); border-color: var(--muted); opacity: .45; }
+.fork-day-part.now { background: var(--burgundy); border-color: var(--burgundy); }
+.fork-day-part.next { background: color-mix(in srgb, var(--burgundy) 25%, transparent); border-color: var(--burgundy); }
+.fork-day-pin { position: absolute; top: -3px; width: 2px; height: 14px; margin-left: -1px; border-radius: 2px; background: var(--ink); }
+
 /* ---------- раскрывающаяся карточка «Ближайшее д/з» ---------- */
 #home-screen .hw-home { margin: 0 0 10px; padding: 0; border-radius: 12px; overflow: hidden; }
 .hw-home-summary { display: flex; align-items: center; gap: 9px; padding: 10px 14px; cursor: pointer; list-style: none; color: var(--ink); font-size: 14px; }
@@ -81,3 +91,15 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 .hw-home .hw-home-row + .hw-home-row { margin-top: 0; }
 .hw-author { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .hw-home-summary::after { transition: none; } }
+
+/* ---------- «Поделиться» парой, всплывающие сообщения ---------- */
+.lesson { position: relative; }
+.lesson-share { position: absolute; top: 8px; right: 8px; z-index: 1; display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; opacity: .75; }
+.lesson-share:hover, .lesson-share:focus-visible { opacity: 1; background: var(--tag, var(--paper)); }
+.lesson-share:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.lesson .details > .subject { padding-right: 26px; }
+.cf-tray { position: fixed; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 14px; pointer-events: none; }
+.cf-toast { pointer-events: auto; display: flex; align-items: center; gap: 12px; max-width: min(520px, 100%); padding: 10px 14px; border-radius: 12px; background: var(--ink); color: var(--paper); box-shadow: 0 8px 26px #00000040; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.cf-btn { flex: none; min-height: 32px; padding: 4px 12px; border: 1px solid color-mix(in srgb, var(--paper) 55%, transparent); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.cf-x { flex: none; width: 28px; height: 28px; border: 0; background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer; opacity: .75; }
+@media (prefers-reduced-motion: no-preference) { .cf-toast { animation: cf-in .18s ease; } @keyframes cf-in { from { transform: translateY(8px); opacity: 0; } } }
