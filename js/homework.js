@@ -84,7 +84,37 @@ function block(item) {
   }
   return box;
 }
+// Блок «Ближайшее д/з» на главном экране: задания к сегодняшнему и завтрашнему дню
+function renderHome() {
+  const home = document.getElementById('home-screen');
+  if (!home) return;
+  home.querySelectorAll('.hw-home').forEach(n => n.remove());
+  const t0 = new Date(); const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const soon = items.filter(i => i.due === isoDate(t0) || i.due === isoDate(tomorrow));
+  if (!soon.length) return;
+  const names = new Map();
+  if (data) for (const e of data.events) names.set(keyOf(e.day, e.start, e.subject, e.group), i18n.content('subjects', e.subject));
+  const box = el('section', 'hw-home');
+  box.append(el('h2', 'hw-title', t('hw.homeTitle')));
+  for (const i of soon.slice(0, 5)) {
+    const row = el('div', 'hw-home-row');
+    const when = i.due === isoDate(t0) ? t('hw.todayWord') : t('hw.tomorrowWord');
+    row.append(el('strong', '', (names.get(i.lesson) || i.lesson.split('|')[2] || '') + ' — ' + when), el('p', 'hw-text', i.text));
+    for (const raw of i.links || []) {
+      const href = safeLink(raw);
+      if (!href) continue;
+      const a = el('a', 'hw-link', new URL(href).hostname); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      row.append(a);
+    }
+    box.append(row);
+  }
+  const next = home.querySelector('.fork-next-card');
+  const grid = home.querySelector('.menu-grid');
+  if (next) next.after(box); else if (grid) grid.before(box); else home.append(box);
+}
+
 function render() {
+  renderHome();
   const cards = document.querySelectorAll('#schedule .lesson');
   cards.forEach(card => card.querySelectorAll('.hw-block').forEach(b => b.remove()));
   if (!items.length) { renderList(); return; }
@@ -99,6 +129,8 @@ function render() {
   renderList();
 }
 document.addEventListener('schedule:render', render);
+window.addEventListener('load', () => setTimeout(renderHome, 600));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderHome(); });
 window.addEventListener('language:change', () => { render(); if (formBuilt) buildForm(); });
 
 // ---------- форма редактора ----------
