@@ -1,5 +1,8 @@
 (() => {
 const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+// режим анимаций выбирается в настройках (data-anim на <html>: full | soft | off); пока не выбран — по системной настройке
+const reduced = () => { const m = document.documentElement.dataset.anim; return m ? m === 'off' : preference.matches; };
+const soft = () => document.documentElement.dataset.anim === 'soft';
 const animations = new Set();
 const reveals = new Set();
 const elementAnimations = new WeakMap();
@@ -16,7 +19,7 @@ function cancel(collection) {
 }
 
 function play(element, frames, options = {}, collection) {
-  if (preference.matches || !visible(element) || typeof element.animate !== 'function') return;
+  if (reduced() || !visible(element) || typeof element.animate !== 'function') return;
   try {
     const previous = elementAnimations.get(element);
     if (previous) previous.cancel();
@@ -41,7 +44,7 @@ function play(element, frames, options = {}, collection) {
 function revealSchedule() {
   cancel(reveals);
   const schedule = document.getElementById('schedule-screen');
-  if (!visible(schedule) || preference.matches) return;
+  if (!visible(schedule) || reduced()) return;
   const lessons = [...schedule.querySelectorAll('#schedule .lesson')].slice(0, 12);
   lessons.forEach((lesson, index) => play(lesson, [
     { opacity: 0, transform: 'translateY(9px)' },
@@ -56,30 +59,33 @@ function revealGamePanel() {
   ], { duration: 280 });
 }
 
-function enter(screen) {
+// dir: 'forward' — открыли раздел (экран приходит справа), 'back' — вернулись (слева). Из нижней панели — без сдвига.
+function enter(screen, dir) {
   cancel(animations);
   reveals.clear();
-  if (!visible(screen) || preference.matches) return;
+  if (!visible(screen) || reduced()) return;
+  const tab = document.body.dataset.tabswitch === '1';
+  if (tab) delete document.body.dataset.tabswitch;
+  const dx = soft() || tab ? 0 : dir === 'back' ? -26 : 26;
   play(document.getElementById('page-title'), [
-    { opacity: .45, transform: 'translateY(3px)' },
+    { opacity: .35, transform: 'translateY(4px)' },
     { opacity: 1, transform: 'translateY(0)' }
-  ], { duration: 180 });
+  ], { duration: 200 });
   play(screen, [
-    { opacity: .55, transform: 'translateY(5px)' },
-    { opacity: 1, transform: 'translateY(0)' }
-  ], { duration: 220 });
+    { opacity: dx ? .15 : .55, transform: dx ? 'translateX(' + dx + 'px)' : 'translateY(5px)' },
+    { opacity: 1, transform: 'translateX(0) translateY(0)' }
+  ], { duration: dx ? 320 : 220 });
   if (screen.id === 'home-screen') {
-    screen.querySelectorAll('.menu-card').forEach((card, index) => play(card, [
-      { opacity: 0, transform: 'translateY(12px)' },
-      { opacity: 1, transform: 'translateY(0)' }
-    ], { duration: 300, delay: Math.min(index * 35, 140) }));
+    if (!soft()) screen.querySelectorAll('.menu-card').forEach((card, index) => play(card, [
+      { opacity: 0, transform: 'translateY(14px) scale(.985)' },
+      { opacity: 1, transform: 'translateY(0) scale(1)' }
+    ], { duration: 340, delay: 40 + Math.min(index * 45, 220) }));
   } else if (screen.id === 'schedule-screen') {
     revealSchedule();
   } else if (screen.id === 'game-screen') {
     revealGamePanel();
   }
 }
-
 function feedback(event) {
   if (event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key))) return;
   if (event.type === 'pointerdown' && event.button !== 0) return;
@@ -99,7 +105,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') cancel(animations);
 });
 const preferenceChanged = () => {
-  if (preference.matches) cancel(animations);
+  if (reduced()) cancel(animations);
 };
 if (preference.addEventListener) preference.addEventListener('change', preferenceChanged);
 else if (preference.addListener) preference.addListener(preferenceChanged);

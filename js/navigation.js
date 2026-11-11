@@ -26,7 +26,7 @@ function navigate(next,focus=true,fromHistory=false){
   window.scrollTo(0,0);
   if(focus)heading.focus({preventScroll:true});
   if(next==='game'&&(window.scheduleArcade||window.scheduleGame))(window.scheduleArcade||window.scheduleGame).activate();
-  if(window.interfaceMotion)window.interfaceMotion.enter(screens[next]);
+  if(window.interfaceMotion)window.interfaceMotion.enter(screens[next],(next==='home'||fromHistory)?'back':'forward');
   syncTelegramBack();
 }
 const setScheduleMode=mode=>{const button=document.querySelector('#schedule-modes [data-value="'+mode+'"]');if(button)button.click();};

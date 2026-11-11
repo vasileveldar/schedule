@@ -106,7 +106,14 @@
     return `${minutes} мин`;
   }
 
-  let nextCard, nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar;
+  let nextCard, nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar, ringText;
+  // смена текста с коротким «всплытием» (если анимации не выключены)
+  function setText(node, text) {
+    if (node.textContent === text) return;
+    const had = node.textContent !== '';
+    node.textContent = text;
+    if (had) { node.classList.remove('fx-swap'); void node.offsetWidth; node.classList.add('fx-swap'); }
+  }
   function createNextCard() {
     const home = document.getElementById('home-screen');
     const menu = home?.querySelector('.menu-grid');
@@ -119,7 +126,9 @@
     nextStatus = make('div', 'fork-next-status');
     dayText = make('div', 'fork-day-text');
     dayBar = make('div', 'fork-day-bar'); dayBar.setAttribute('aria-hidden', 'true');
-    nextCard.append(nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar);
+    const ring = make('span', 'fork-ring'); ring.setAttribute('aria-hidden', 'true');
+    ringText = make('span', 'fork-ring-text'); ring.append(ringText);
+    nextCard.append(ring, nextLabel, nextSubject, nextTime, nextStatus, dayText, dayBar);
     home.insertBefore(nextCard, menu);
   }
 
@@ -129,18 +138,26 @@
     const active = entries.find(item => item.start <= now && item.end > now);
     const item = active || entries.find(item => item.start > now);
     if (!item) {
-      nextCard.classList.remove('is-current');
-      nextLabel.textContent = t('next');
-      nextSubject.textContent = t('noClass');
-      nextTime.textContent = '';
+      nextCard.classList.remove('is-current', 'is-soon');
+      nextCard.classList.add('no-ring');
+      setText(nextLabel, t('next'));
+      setText(nextSubject, t('noClass'));
+      setText(nextTime, '');
       nextStatus.textContent = '';
       return;
     }
+    nextCard.classList.remove('no-ring');
     nextCard.classList.toggle('is-current', Boolean(active));
-    nextLabel.textContent = active ? t('now') : t('next');
-    nextSubject.textContent = item.event.subject;
+    // кольцо: у идущей пары — сколько прошло, у ближайшей — заполняется за последний час до начала
+    const minutesTo = Math.max(0, Math.ceil(((active ? item.end : item.start) - now) / 60000));
+    const progress = active ? (now - item.start) / (item.end - item.start) : 1 - Math.min(60, minutesTo) / 60;
+    nextCard.style.setProperty('--nc', Math.max(0, Math.min(1, progress)).toFixed(3));
+    nextCard.classList.toggle('is-soon', !active && minutesTo <= 5);
+    ringText.textContent = minutesTo >= 100 ? `${Math.round(minutesTo / 60)}${language() === 'ru' ? 'ч' : 'h'}` : `${minutesTo}′`;
+    setText(nextLabel, active ? t('now') : t('next'));
+    setText(nextSubject, item.event.subject);
     const room = (window.scheduleOverrides && window.scheduleOverrides.roomFor(item.event, item.start)) || item.event.room;
-    nextTime.textContent = `${item.event.start}–${item.event.end}${room ? ` · ${room}` : ''}`;
+    setText(nextTime, `${item.event.start}–${item.event.end}${room ? ` · ${room}` : ''}`);
     if (active) {
       const next = entries.find(candidate => candidate.start >= item.end);
       nextStatus.textContent = next ? replace(t('starts'), { time: countdown(next.start - now) }) : replace(t('ends'), { time: countdown(item.end - now) });
@@ -165,25 +182,39 @@
     }
     return [...map.values()].sort((a, b) => a.s - b.s || a.e - b.e);
   }
+  let daySig = '', dayPin = null;
   function renderDay(now = new Date()) {
     if (!dayText) return;
     const slots = todaySlots(now);
     const minutes = now.getHours() * 60 + now.getMinutes();
-    dayBar.replaceChildren();
     dayBar.hidden = !slots.length;
-    if (!slots.length) { dayText.textContent = t('dayNone'); return; }
+    if (!slots.length) { setText(dayText, t('dayNone')); daySig = ''; dayBar.replaceChildren(); return; }
     const left = slots.filter(slot => slot.e > minutes);
     const current = slots.some(slot => slot.s <= minutes && slot.e > minutes);
     const values = { total: slots.length, left: left.length, end: slots[slots.length - 1].end.replace(/^(\d):/, '0$1:') };
-    dayText.textContent = replace(t(!left.length ? 'dayOver' : current || !slots.some(slot => slot.e <= minutes) ? 'dayLine' : 'dayGap'), values);
+    setText(dayText, replace(t(!left.length ? 'dayOver' : current || !slots.some(slot => slot.e <= minutes) ? 'dayLine' : 'dayGap'), values));
     const from = slots[0].s, span = Math.max(1, slots[slots.length - 1].e - from);
-    for (const slot of slots) {
-      const part = make('i', 'fork-day-part ' + (slot.e <= minutes ? 'done' : slot.s <= minutes ? 'now' : 'next'));
-      part.style.left = ((slot.s - from) / span * 100) + '%';
-      part.style.width = ((slot.e - slot.s) / span * 100) + '%';
-      dayBar.append(part);
+    const sig = slots.map(slot => slot.s + '-' + slot.e).join(',');
+    if (sig !== daySig) { // шкала строится заново только когда изменился набор пар; иначе указатель плавно едет
+      daySig = sig; dayBar.replaceChildren();
+      slots.forEach((slot, index) => {
+        const part = make('i', 'fork-day-part');
+        part.style.left = ((slot.s - from) / span * 100) + '%';
+        part.style.width = ((slot.e - slot.s) / span * 100) + '%';
+        part.style.setProperty('--i', index);
+        dayBar.append(part);
+      });
+      dayPin = make('b', 'fork-day-pin'); dayBar.append(dayPin);
+      dayBar.classList.add('draw'); setTimeout(() => dayBar.classList.remove('draw'), 1000);
     }
-    if (minutes >= from && minutes <= from + span) { const pin = make('b', 'fork-day-pin'); pin.style.left = ((minutes - from) / span * 100) + '%'; dayBar.append(pin); }
+    dayBar.querySelectorAll('.fork-day-part').forEach((part, index) => {
+      const slot = slots[index];
+      part.className = 'fork-day-part ' + (slot.e <= minutes ? 'done' : slot.s <= minutes ? 'now' : 'next');
+    });
+    if (dayPin) {
+      dayPin.hidden = !(minutes >= from && minutes <= from + span);
+      dayPin.style.left = (Math.max(0, Math.min(1, (minutes - from) / span)) * 100) + '%';
+    }
   }
   function createSearch() {
     const main = document.querySelector('#schedule-screen > main');

@@ -33,10 +33,19 @@ const doneSet = (() => { try { const a = JSON.parse(localStorage.getItem(DONE_KE
 const isDone = i => doneSet.has(i.id);
 function syncDoneToApp() { try { if (bridge && typeof bridge.setHomeworkDone === 'function') bridge.setHomeworkDone(JSON.stringify([...doneSet])); } catch (_) {} } // виджету д/з нужны отметки
 function saveDone() { try { localStorage.setItem(DONE_KEY, JSON.stringify([...doneSet])); } catch (_) {} syncDoneToApp(); }
+let justToggled = null; // id задания, у которого только что нажали «Сделано» (кнопка при перерисовке получает «хлопок»)
 function setDone(i, on) {
   if (on) doneSet.add(i.id); else doneSet.delete(i.id);
-  saveDone(); render();
+  saveDone();
+  justToggled = i.id; setTimeout(() => { justToggled = null; }, 700);
   document.dispatchEvent(new CustomEvent('hw:done-change'));
+  // отмеченное задание на главной сначала плавно сворачивается, потом список перерисовывается
+  const row = on ? document.querySelector('.hw-home-row[data-hw="' + i.id + '"]') : null;
+  const motion = document.documentElement.dataset.anim;
+  if (row && motion && motion !== 'off' && row.animate) {
+    row.style.overflow = 'hidden';
+    row.animate([{ opacity: 1, maxHeight: row.offsetHeight + 'px', transform: 'translateX(0)' }, { opacity: 0, maxHeight: '0px', paddingTop: '0px', paddingBottom: '0px', transform: 'translateX(40px)' }], { duration: 280, easing: 'ease-in', fill: 'forwards' }).finished.then(render).catch(render);
+  } else render();
 }
 function pruneDone() { // отметки к удалённым заданиям не копим
   const ids = new Set(items.map(i => i.id)); let changed = false;
@@ -140,7 +149,7 @@ async function applyPhotos(hwId, picker) {
 
 function checkButton(i) {
   const on = isDone(i);
-  const b = el('button', 'hw-check' + (on ? ' on' : ''), on ? '✓ ' + dt('done') : '○ ' + dt('done'));
+  const b = el('button', 'hw-check' + (on ? ' on' : '') + (justToggled === i.id ? ' pop' : ''), on ? '✓ ' + dt('done') : '○ ' + dt('done'));
   b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.title = on ? dt('markUndone') : dt('markDone');
   b.addEventListener('click', e => { e.stopPropagation(); setDone(i, !on); });
   return b;
@@ -224,6 +233,7 @@ function block(item) {
 }
 // Карточка «Ближайшее д/з» на главной: свёрнута по умолчанию, внутри только актуальные задания (срок не прошёл)
 const HOME_OPEN_KEY = 'schedule-hw-open';
+let lastCount = null; // число заданий в карточке на главной (при изменении цифра «подпрыгивает»)
 function renderHome() {
   const home = document.getElementById('home-screen');
   if (!home) return;
@@ -240,12 +250,14 @@ function renderHome() {
   const box = el('details', 'hw-home');
   box.open = wasOpen;
   const sum = el('summary', 'hw-home-summary');
-  sum.append(el('span', 'hw-badge', '✎'), el('strong', '', t('hw.homeTitle')), el('span', 'hw-count', String(actual.length)));
+  const count = el('span', 'hw-count' + (lastCount !== null && lastCount !== actual.length ? ' bump' : ''), String(actual.length));
+  lastCount = actual.length;
+  sum.append(el('span', 'hw-badge', '✎'), el('strong', '', t('hw.homeTitle')), count);
   box.append(sum);
   box.addEventListener('toggle', () => { try { localStorage.setItem(HOME_OPEN_KEY, box.open ? '1' : '0'); } catch (_) {} });
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   for (const i of actual.slice(0, 8)) {
-    const row = el('div', 'hw-home-row');
+    const row = el('div', 'hw-home-row'); row.dataset.hw = i.id;
     const when = i.due === today ? t('hw.todayWord') : i.due === isoDate(tomorrow) ? t('hw.tomorrowWord') : dateText(i.due);
     const top = el('div', 'hw-home-top');
     top.append(el('strong', '', (names.get(i.lesson) || i.lesson.split('|')[2] || '') + ' — ' + when), checkButton(i));

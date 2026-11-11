@@ -31,6 +31,7 @@ function make(name) {
   buttons.set(name, b); return b;
 }
 function go(name) {
+  document.body.dataset.tabswitch = '1'; // переход из панели — без сдвига экрана
   if (name === 'home') { if (app.getScreen() !== 'home' && window.appNavigateBack) window.appNavigateBack(); return; }
   if (app.getScreen() === name) return;
   const trigger = name === 'settings' ? document.getElementById('open-settings') : name === 'homework' ? document.getElementById('hw-menu-card') : document.querySelector('#home-screen [data-open-screen="' + name + '"]');
