@@ -77,3 +77,28 @@ body.ed-open { overflow: hidden; }
 .skel.slim { height: 40px; }
 @media (prefers-reduced-motion: no-preference) { .skel { animation: skel 1.3s linear infinite; } @keyframes skel { to { background-position: -200% 0; } } }
 @media (min-width: 900px) { .skel { margin-bottom: 14px; } .skel.card { height: 128px; } }
+
+/* ---------- раздел «Управление» (владелец) ---------- */
+.owner-shell { max-width: 640px; margin: 0 auto; padding: 18px 16px 40px; }
+.ow-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
+.ow-stamp { color: var(--muted); font-size: 12px; font-weight: 600; }
+.ow-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.ow-tile { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--fx-r-md, 14px); background: var(--surface); box-shadow: var(--fx-sh-1, none); }
+.ow-tile strong { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.ow-tile span { color: var(--muted); font-size: 12px; font-weight: 600; }
+.ow-tile.warn { border-color: var(--burgundy); }
+.ow-tile.warn strong { color: var(--burgundy); }
+.ow-section { margin-bottom: 14px; }
+.ow-list { margin-top: 10px; }
+.ow-row { padding: 12px 0; border-top: 1px solid var(--line); }
+.ow-list .ow-row:first-child, .ow-section > .ow-row:first-of-type { border-top: 0; }
+.ow-user { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ow-meta { color: var(--muted); font-size: 12px; font-weight: 600; }
+.ow-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ow-acts.wrap { margin-top: 0; }
+.ow-yes { background: var(--selected); border-color: var(--selected); color: var(--selected-text, #fff); }
+.ow-del { color: var(--burgundy); }
+.ow-err { margin: 4px 0; font-size: 12px; color: var(--burgundy); overflow-wrap: anywhere; }
+.ow-pre { margin: 10px 0 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.owner-shell .hw-hint { white-space: pre-line; }
+@media (min-width: 900px) { .owner-shell { max-width: 900px; } .ow-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

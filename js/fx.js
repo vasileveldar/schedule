@@ -41,8 +41,9 @@ const ICON = {
   moodle: '<path d="M2.8 9.4 12 5l9.2 4.4L12 13.8z"/><path d="M6.6 11.6v4.2c0 1.3 2.5 2.7 5.4 2.7s5.4-1.4 5.4-2.7v-4.2"/><path d="M21.2 9.4v5"/>',
   platonus: '<rect x="3.4" y="5.5" width="17.2" height="13" rx="2.6"/><circle cx="9" cy="11" r="2.1"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.6M14.5 13.2h3.6"/>',
   homework: '<path d="M5 19.2l.9-4 9.6-9.6 3.1 3.1-9.6 9.6z"/><path d="M14 7.2l3 3"/>',
+  owner: '<path d="M12 3.2 4.6 6v5.6c0 4.4 3 7.6 7.4 9.2 4.4-1.6 7.4-4.8 7.4-9.2V6z"/><path d="M9 12l2.2 2.2L15.4 10"/>',
 };
-const ICON_FOR = { '.schedule-card': 'schedule', '.academic-calendar-card': 'calendar', '.game-card': 'game', '.moodle-card': 'moodle', '.platonus-card': 'platonus', '.homework-menu-card': 'homework' };
+const ICON_FOR = { '.schedule-card': 'schedule', '.academic-calendar-card': 'calendar', '.game-card': 'game', '.moodle-card': 'moodle', '.platonus-card': 'platonus', '.homework-menu-card': 'homework', '.owner-menu-card': 'owner' };
 for (const [sel, name] of Object.entries(ICON_FOR)) {
   const sym = document.querySelector('#home-screen ' + sel + ' .menu-symbol');
   if (!sym) continue;

@@ -1,7 +1,7 @@
 (() => {
-const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen'),homework:document.getElementById('homework-screen')};
-const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings',homework:'nav.homework'};
-const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings',homework:'nav.openedHomework'};
+const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen'),homework:document.getElementById('homework-screen'),owner:document.getElementById('owner-screen')};
+const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings',homework:'nav.homework',owner:'nav.owner'};
+const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings',homework:'nav.openedHomework',owner:'nav.openedOwner'};
 const heading=document.getElementById('page-title');
 const back=document.getElementById('back-menu');
 const eyebrow=document.getElementById('header-eyebrow');

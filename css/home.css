@@ -103,3 +103,5 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 .cf-btn { flex: none; min-height: 32px; padding: 4px 12px; border: 1px solid color-mix(in srgb, var(--paper) 55%, transparent); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .cf-x { flex: none; width: 28px; height: 28px; border: 0; background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer; opacity: .75; }
 @media (prefers-reduced-motion: no-preference) { .cf-toast { animation: cf-in .18s ease; } @keyframes cf-in { from { transform: translateY(8px); opacity: 0; } } }
+
+#home-screen .owner-menu-card { order: 7; grid-column: 1 / -1; }

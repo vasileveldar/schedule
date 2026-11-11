@@ -1,7 +1,7 @@
 /* Загрузчик: подтягивает данные (data/*.json), затем подключает скрипты приложения по порядку. */
 (function () {
   'use strict';
-  var APP_SCRIPTS = ['js/i18n.js', 'js/theme.js', 'js/ui.js', 'js/scores.js', 'js/game.js', 'js/arcade.js', 'js/g2048.js', 'js/motion.js', 'js/navigation.js', 'js/homework.js', 'js/overrides.js', 'js/editor.js', 'js/tabbar.js', 'js/feedback.js', 'js/android.js', 'js/comfort.js', 'js/fx.js']; /*SCRIPTS*/
+  var APP_SCRIPTS = ['js/i18n.js', 'js/theme.js', 'js/ui.js', 'js/scores.js', 'js/game.js', 'js/arcade.js', 'js/g2048.js', 'js/motion.js', 'js/navigation.js', 'js/homework.js', 'js/overrides.js', 'js/editor.js', 'js/tabbar.js', 'js/owner.js', 'js/feedback.js', 'js/android.js', 'js/comfort.js', 'js/fx.js']; /*SCRIPTS*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
   var CACHE_KEY = 'schedule-json-cache';
   var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
