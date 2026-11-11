@@ -7,13 +7,15 @@ const back=document.getElementById('back-menu');
 const eyebrow=document.getElementById('header-eyebrow');
 const t=(key)=>window.scheduleI18n.t(key);
 let current='home';
+let depth=0; // сколько экранов открыто поверх главного (записи в истории браузера)
 function refreshLabels(){
   heading.textContent=t(titles[current]);
   document.getElementById('subtitle').textContent=t('app.subtitle');
   document.getElementById('screen-status').textContent=t(announcements[current]);
 }
-function navigate(next,focus=true){
+function navigate(next,focus=true,fromHistory=false){
   if(!screens[next])return;
+  if(!fromHistory&&next!=='home'){depth+=1;try{history.pushState({screen:next,depth},'');}catch(_){}}
   if(current==='game'&&window.scheduleGame)window.scheduleGame.deactivate();
   current=next;
   for(const [key,screen] of Object.entries(screens))screen.hidden=key!==next;
@@ -25,6 +27,7 @@ function navigate(next,focus=true){
   if(focus)heading.focus({preventScroll:true});
   if(next==='game'&&window.scheduleGame)window.scheduleGame.activate();
   if(window.interfaceMotion)window.interfaceMotion.enter(screens[next]);
+  syncTelegramBack();
 }
 const setScheduleMode=mode=>{const button=document.querySelector('#schedule-modes [data-value="'+mode+'"]');if(button)button.click();};
 // The regular timetable is the only default mode; the RK1 view opens solely from the academic calendar.
@@ -39,8 +42,34 @@ document.querySelectorAll('[data-open-assessment]').forEach(button=>button.addEv
 }));
 const exitAssessment=document.getElementById('assessment-exit');
 if(exitAssessment)exitAssessment.addEventListener('click',()=>setScheduleMode('regular'));
-back.addEventListener('click',()=>navigate('home'));
-window.appNavigateBack=()=>{if(current==='home')return false;navigate('home');return true;};
+// «Назад»: жест/кнопка системы и кнопка Telegram возвращают на предыдущий экран, а не закрывают приложение
+function goHome(){
+  if(current==='home')return false;
+  if(depth>0){try{history.go(-depth);return true;}catch(_){}}
+  depth=0;navigate('home',true,true);return true;
+}
+window.addEventListener('popstate',event=>{
+  const st=event.state;
+  if(st&&st.screen&&screens[st.screen]){depth=st.depth||1;navigate(st.screen,false,true);}
+  else{depth=0;navigate('home',false,true);}
+});
+function syncTelegramBack(){
+  const tg=window.Telegram&&window.Telegram.WebApp;
+  if(!tg||!tg.BackButton)return;
+  try{if(current==='home')tg.BackButton.hide();else tg.BackButton.show();}catch(_){}
+}
+let tgBound=false;
+function bindTelegram(){
+  const tg=window.Telegram&&window.Telegram.WebApp;
+  if(!tg||!tg.BackButton||tgBound)return;
+  tgBound=true;
+  try{tg.BackButton.onClick(()=>{if(depth>1){history.back();}else goHome();});}catch(_){}
+  syncTelegramBack();
+}
+document.addEventListener('telegram:ready',bindTelegram);
+bindTelegram();
+back.addEventListener('click',goHome);
+window.appNavigateBack=()=>goHome();
 window.scheduleApp={navigate,getScreen:()=>current};
 window.addEventListener('language:change',refreshLabels);
 navigate('home',false);
