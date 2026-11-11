@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-const CACHE = 'schedule-in251-74e7508eda2f';
+const CACHE = 'schedule-in251-7500f0a65922';
 const SHELL = [
   "./",
   "./apple-touch-icon.png",

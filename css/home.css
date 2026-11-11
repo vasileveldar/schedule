@@ -40,6 +40,23 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 #home-screen .moodle-card { order: 4; }
 #home-screen .platonus-card { order: 5; }
 #home-screen .homework-menu-card { order: 6; grid-column: 1 / -1; }
+/* Компьютер: контент по ширине шапки, плитки в четыре колонки */
+@media (min-width: 900px) {
+  #home-screen.home-shell { max-width: 1120px; padding-left: 0; padding-right: 0; padding-top: 22px; }
+  #home-screen .menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  #home-screen .menu-card { padding: 18px 18px; gap: 14px; min-height: 84px; }
+  #home-screen .menu-symbol { width: 44px; height: 44px; font-size: 22px; }
+  #home-screen .menu-copy strong { font-size: 17px; }
+  #home-screen .schedule-card { padding: 22px 24px; }
+  #home-screen .schedule-card .menu-symbol { width: 52px; height: 52px; font-size: 26px; }
+  #home-screen .schedule-card .menu-copy strong { font-size: 22px; }
+  #home-screen .game-card { grid-column: auto; }
+  #home-screen .fork-next-card, #home-screen .hw-home { margin: 0 0 14px; max-width: none; }
+  #home-screen .fork-next-card { padding: 16px 20px; }
+  #home-screen .fork-next-subject { font-size: 19px; }
+  .hw-home-summary { padding: 13px 20px; }
+  .hw-home .hw-home-row { padding: 12px 20px; }
+}
 @media (max-width: 380px) {
   #home-screen .menu-card { padding: 11px 10px; gap: 8px; }
   #home-screen .menu-copy strong { font-size: 14.5px; }

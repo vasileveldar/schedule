@@ -67,3 +67,13 @@
 /* гироскоп: кнопки влево/вправо убраны, пауза остаётся */
 #jump-game[data-control="tilt"] #jg-left, #jump-game[data-control="tilt"] #jg-right { display: none; }
 #jump-game[data-control="tilt"] .jg-controls { grid-template-columns: 1fr; }
+
+/* Компьютер: игра слева, таблица рекордов справа */
+@media (min-width: 1000px) {
+  body[data-screen="game"] #game-screen.game-shell { max-width: 1040px; display: grid; grid-template-columns: minmax(0, 560px) minmax(280px, 380px); gap: 0 28px; justify-content: center; align-content: start; padding-top: 22px; }
+  #game-screen .arc-bar, #game-screen .arc-ctl, #game-screen #jump-game, #game-screen .arc-extra { grid-column: 1; max-width: none; margin-left: 0; margin-right: 0; }
+  #game-screen .arc-bar { grid-row: 1; }
+  #game-screen .arc-ctl { grid-row: 2; }
+  #game-screen #jump-game, #game-screen .arc-extra { grid-row: 3; }
+  #game-screen .arc-board { grid-column: 2; grid-row: 1 / span 3; align-self: start; position: sticky; top: 16px; max-width: none; margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--portal-shadow, none); }
+}
