@@ -32,8 +32,15 @@ class JumpGameEngine {
     this.jetpackTime = 0;
     this.jetpacksCollected = 0;
     this.nextJetpackSequence = 18 + Math.floor(this.random() * 6);
+    this.enemies = [];
+    this.nextEnemySequence = 14 + Math.floor(this.random() * 5);
+    this.coins = 0;
+    this.stomps = 0;
+    this.cause = null;
+    this.events = [];
     this.fillPlatforms();
   }
+  die(cause) { this.status = 'gameover'; this.cause = cause; this.events.push('over'); }
   pause() { if (this.status === 'playing') this.status = 'paused'; }
   resume() { if (this.status === 'paused') this.status = 'playing'; }
   resize(width, height) {
@@ -52,7 +59,15 @@ class JumpGameEngine {
       this.lastX = nextX;
       const jetpack = this.sequence === this.nextJetpackSequence;
       if (jetpack) this.nextJetpackSequence += 28 + Math.floor(this.random() * 12);
-      this.platforms.push({ id: this.nextId++, x: nextX, y: this.lastY, width, type: this.sequence % 8 === 5 ? 'spring' : 'normal', broken: false, pulse: 0, jetpack });
+      let type = this.sequence % 8 === 5 ? 'spring' : 'normal';
+      if (type === 'normal' && this.lastY > 1500 && this.sequence % 7 === 3) type = 'moving';
+      const platform = { id: this.nextId++, x: nextX, y: this.lastY, width, type, broken: false, pulse: 0, jetpack, coin: !jetpack && type !== 'spring' && this.sequence % 4 === 1 };
+      if (type === 'moving') { platform.vx = (this.random() < .5 ? -1 : 1) * (45 + difficulty * 3); platform.min = 12; platform.max = Math.max(13, this.width - width - 12); }
+      this.platforms.push(platform);
+      if (this.sequence >= this.nextEnemySequence && this.lastY > 1800) {
+        this.nextEnemySequence = this.sequence + 10 + Math.floor(this.random() * 8);
+        this.enemies.push({ id: this.nextId++, x: Math.max(20, Math.min(this.width - 20, this.width - nextX - width / 2)), y: this.lastY - gap / 2 - 10, vx: (this.random() < .5 ? -1 : 1) * (50 + difficulty * 2), w: 34, h: 20, dead: false, age: 0 });
+      }
       // Fragile side routes never replace the reachable, permanent route.
       if (this.sequence % 3 === 2) {
         const sideX = nextX < this.width / 2 - width / 2 ? Math.min(this.width - 73, nextX + width + 36) : Math.max(9, nextX - 102);
@@ -71,6 +86,19 @@ class JumpGameEngine {
     p.x += p.vx * dt;
     if (p.x < -p.width / 2) p.x = this.width + p.width / 2;
     if (p.x > this.width + p.width / 2) p.x = -p.width / 2;
+    for (const platform of this.platforms) {
+      if (!platform.vx) continue;
+      platform.x += platform.vx * dt;
+      if (platform.x < platform.min) { platform.x = platform.min; platform.vx = Math.abs(platform.vx); }
+      if (platform.x > platform.max) { platform.x = platform.max; platform.vx = -Math.abs(platform.vx); }
+    }
+    for (const e of this.enemies) {
+      e.age += dt;
+      if (e.dead) continue;
+      e.x += e.vx * dt;
+      if (e.x < 18) { e.x = 18; e.vx = Math.abs(e.vx); }
+      if (e.x > this.width - 18) { e.x = this.width - 18; e.vx = -Math.abs(e.vx); }
+    }
     const oldY = p.y;
     if (this.jetpackTime > 0) {
       const poweredTime = Math.min(dt, this.jetpackTime);
@@ -86,6 +114,7 @@ class JumpGameEngine {
         p.vy = platform.type === 'spring' ? SPRING_SPEED : JUMP_SPEED;
         platform.pulse = 1;
         this.lastLanding = platform.type;
+        this.events.push(platform.type === 'spring' ? 'spring' : 'bounce');
         if (platform.type === 'breakable') {
           platform.broken = true;
           this.fragments.push({ x: platform.x, y: platform.y, width: platform.width, age: 0 });
@@ -104,20 +133,39 @@ class JumpGameEngine {
         this.jetpackTime = JETPACK_DURATION;
         this.jetpacksCollected++;
         p.vy = JETPACK_SPEED;
+        this.events.push('jetpack');
       }
     }
+    for (const platform of this.platforms) {
+      if (!platform.coin || platform.broken) continue;
+      const cx = platform.x + platform.width / 2, cy = platform.y + 24;
+      if (Math.abs(p.x - cx) < p.width * .5 + 9 && Math.max(oldY, p.y) + p.height >= cy - 9 && Math.min(oldY, p.y) <= cy + 9) {
+        platform.coin = false; this.coins++; this.events.push('coin');
+      }
+    }
+    for (const e of this.enemies) {
+      if (e.dead) continue;
+      const hitX = Math.abs(p.x - e.x) < p.width * .4 + e.w / 2;
+      const hitY = Math.min(oldY, p.y) < e.y + e.h && Math.max(oldY, p.y) + p.height > e.y;
+      if (!hitX || !hitY) continue;
+      if (this.jetpackTime > 0) { e.dead = true; e.age = 0; this.stomps++; this.events.push('stomp'); }
+      else if (p.vy < 0 && oldY >= e.y + e.h * .4) { e.dead = true; e.age = 0; this.stomps++; p.y = Math.max(p.y, e.y + e.h); p.vy = JUMP_SPEED; this.events.push('stomp'); }
+      else { this.die('bird'); return; }
+    }
     this.maxHeight = Math.max(this.maxHeight, p.y);
-    this.score = Math.floor((this.maxHeight - 34) / 10);
+    this.heightScore = Math.floor((this.maxHeight - 34) / 10);
+    this.score = this.heightScore + this.coins * 3 + this.stomps * 10;
     this.camera = Math.max(this.camera, p.y - this.height * .54);
     for (const platform of this.platforms) platform.pulse = Math.max(0, platform.pulse - dt * 4);
     for (const fragment of this.fragments) fragment.age += dt;
     this.fragments = this.fragments.filter(f => f.age < .75);
     this.platforms = this.platforms.filter(platform => platform.y > this.camera - 90 && !platform.broken);
+    this.enemies = this.enemies.filter(e => e.y > this.camera - 90 && !(e.dead && e.age > .6));
     this.fillPlatforms();
-    if (p.y < this.camera - 60) this.status = 'gameover';
+    if (p.y < this.camera - 60) this.die('fall');
   }
   getState() {
-    return { score: this.score, status: this.status, player: { ...this.player }, camera: this.camera, maxHeight: this.maxHeight, lastLanding: this.lastLanding, jetpackTime: this.jetpackTime, jetpackDuration: JETPACK_DURATION, jetpackActive: this.jetpackTime > 0, jetpacksCollected: this.jetpacksCollected, platforms: this.platforms.map(p => ({ ...p })), fragments: this.fragments.map(f => ({ ...f })) };
+    return { score: this.score, status: this.status, player: { ...this.player }, camera: this.camera, maxHeight: this.maxHeight, heightScore: this.heightScore || 0, coins: this.coins, stomps: this.stomps, cause: this.cause, enemies: this.enemies.map(e => ({ ...e })), lastLanding: this.lastLanding, jetpackTime: this.jetpackTime, jetpackDuration: JETPACK_DURATION, jetpackActive: this.jetpackTime > 0, jetpacksCollected: this.jetpacksCollected, platforms: this.platforms.map(p => ({ ...p })), fragments: this.fragments.map(f => ({ ...f })) };
   }
 }
 JumpGameEngine.constants = { FIXED_STEP, GRAVITY, JUMP_SPEED, SPRING_SPEED, RUN_SPEED, JETPACK_DURATION, JETPACK_SPEED };
@@ -156,10 +204,12 @@ const fallbackText = {
   'game.overAnnouncement': 'Игра окончена. Счёт: {score}. Рекорд: {best}.',
   'game.startAnnouncement': 'Игра началась. Прыжки автоматические.',
   'game.resumeAnnouncement': 'Игра продолжается.',
-  'game.jetpackAnnouncement': 'Ракетный ранец активирован! Продолжайте двигаться влево и вправо.'
+  'game.jetpackAnnouncement': 'Ракетный ранец активирован! Продолжайте двигаться влево и вправо.',
+  'game.zoneAnnouncement': 'Новая зона: {zone}.', 'game.ghost': 'рекорд',
+  'zone.notebook': 'Тетрадь', 'zone.lecture': 'Аудитория', 'zone.space': 'Космос'
 };
 function t(key, params = {}) {
-  if (root.scheduleI18n) return root.scheduleI18n.t(key, params);
+  if (root.scheduleI18n) { const v = root.scheduleI18n.t(key, params); if (v !== key) return v; }
   return (fallbackText[key] || key).replace(/\{(\w+)\}/g, (match, name) => params[name] === undefined ? match : String(params[name]));
 }
 const engine = new JumpGameEngine();
@@ -179,6 +229,28 @@ let dragPointer = null;
 let palette = {};
 let currentAnnouncement = null;
 let announcedJetpacks = 0;
+let tiltAxis = 0;
+const arcade = () => root.scheduleArcade;
+const tiltMode = () => !!(arcade() && arcade().fx.tilt);
+window.addEventListener('deviceorientation', event => {
+  const a = arcade();
+  if (!active || mode !== 'playing' || !a || !a.fx.tilt || event.gamma === null) { tiltAxis = 0; return; }
+  const angle = (screen.orientation && screen.orientation.angle) || 0;
+  const g = angle === 90 ? -event.beta : angle === 270 || angle === -90 ? event.beta : event.gamma;
+  tiltAxis = Math.max(-1, Math.min(1, (g || 0) / 18));
+});
+function drainEvents() {
+  const a = arcade();
+  for (const name of engine.events.splice(0)) {
+    if (!a) continue;
+    if (name === 'bounce') a.sfx('bounce');
+    else if (name === 'spring') { a.sfx('spring'); a.haptic(25); }
+    else if (name === 'jetpack') { a.sfx('jetpack'); a.haptic(60); }
+    else if (name === 'coin') { a.sfx('coin'); a.haptic(10); }
+    else if (name === 'stomp') { a.sfx('stomp'); a.haptic(40); }
+    else if (name === 'over') { a.sfx('over'); a.haptic([60, 40, 90]); }
+  }
+}
 
 function announce(key, params = {}) {
   currentAnnouncement = { key, params };
@@ -204,6 +276,7 @@ function render() {
   const w = engine.width, h = engine.height;
   context.fillStyle = palette.sky || '#f4f5ef';
   context.fillRect(0, 0, w, h);
+  drawZone(w, h);
   context.strokeStyle = palette.grid || '#dae0e4';
   context.lineWidth = .7;
   context.beginPath();
@@ -226,7 +299,7 @@ function render() {
   for (const platform of engine.platforms) {
     const y = h - (platform.y - engine.camera);
     if (y < -35 || y > h + 20) continue;
-    const color = platform.type === 'breakable' ? palette.rust : palette.teal;
+    const color = platform.type === 'breakable' ? palette.rust : platform.type === 'moving' ? palette.characterAccent : palette.teal;
     context.fillStyle = palette.shadow;
     rounded(platform.x, y + 3, platform.width, 9, 4); context.fill();
     context.fillStyle = color;
@@ -244,6 +317,12 @@ function render() {
       context.strokeStyle = palette.gold; context.lineWidth = 2.4;
       context.beginPath(); context.moveTo(cx - 7, y); context.lineTo(cx + 6, y - tall * .25); context.lineTo(cx - 6, y - tall * .5); context.lineTo(cx + 6, y - tall * .75); context.lineTo(cx - 6, y - tall); context.stroke();
       context.fillStyle = palette.gold; rounded(cx - 10, y - tall - 4, 20, 4, 2); context.fill();
+    }
+    if (platform.coin) {
+      const cx = platform.x + platform.width / 2, cy = y - 24 + Math.sin(engine.time * 4 + platform.id) * 1.5;
+      context.fillStyle = palette.gold; context.beginPath(); context.arc(cx, cy, 7, 0, Math.PI * 2); context.fill();
+      context.strokeStyle = palette.characterInk; context.lineWidth = 1.4; context.stroke();
+      context.fillStyle = '#ffffff80'; context.beginPath(); context.arc(cx - 2, cy - 2, 2, 0, Math.PI * 2); context.fill();
     }
     if (platform.jetpack) {
       const cx = platform.x + platform.width / 2;
@@ -271,6 +350,20 @@ function render() {
     }
     context.restore();
   }
+  for (const e of engine.enemies) {
+    const ey = h - (e.y - engine.camera);
+    if (ey < -40 || ey > h + 40) continue;
+    context.save(); context.translate(e.x, ey - e.h / 2);
+    if (e.dead) { context.globalAlpha = Math.max(0, 1 - e.age / .6); context.translate(0, e.age * 160); context.rotate(e.age * 6); }
+    const flap = Math.sin(engine.time * 16 + e.id) * 8;
+    context.fillStyle = palette.rust;
+    context.beginPath(); context.ellipse(0, 0, 14, 9, 0, 0, Math.PI * 2); context.fill();
+    context.beginPath(); context.moveTo(-4, -2); context.lineTo(-18, -12 - flap); context.lineTo(-8, 2); context.moveTo(4, -2); context.lineTo(18, -12 - flap); context.lineTo(8, 2); context.fill();
+    context.fillStyle = palette.characterInk; context.beginPath(); context.arc(e.vx > 0 ? 8 : -8, -2, 2, 0, Math.PI * 2); context.fill();
+    context.fillStyle = palette.gold; context.beginPath(); const bx = e.vx > 0 ? 13 : -13; context.moveTo(bx, 0); context.lineTo(bx + (e.vx > 0 ? 7 : -7), 2); context.lineTo(bx, 4); context.fill();
+    context.restore();
+  }
+  drawGhost(w, h);
   const p = engine.player;
   const drawBackpack = x => {
     const y = h - (p.y - engine.camera) - p.height;
@@ -310,6 +403,69 @@ function render() {
   drawBackpack(p.x);
   if (p.x < 20) drawBackpack(p.x + w);
   if (p.x > w - 20) drawBackpack(p.x - w);
+  drawBanner();
+  if (engine.coins) { context.save(); context.fillStyle = palette.gold; context.beginPath(); context.arc(w - 46, 22, 6, 0, Math.PI * 2); context.fill(); context.fillStyle = palette.ink; context.font = '700 13px sans-serif'; context.textAlign = 'left'; context.fillText(String(engine.coins), w - 36, 27); context.restore(); }
+}
+const smooth = (v, a, b) => { const x = Math.max(0, Math.min(1, (v - a) / (b - a))); return x * x * (3 - 2 * x); };
+const ZONES = [{ from: 0, key: 'zone.notebook' }, { from: 150, key: 'zone.lecture' }, { from: 400, key: 'zone.space' }];
+function zoneIndex(score) { let z = 0; ZONES.forEach((zone, i) => { if (score >= zone.from) z = i; }); return z; }
+function drawZone(w, h) {
+  const hs = engine.heightScore || 0;
+  const a1 = smooth(hs, 110, 190), a2 = smooth(hs, 340, 440);
+  if (a1 > 0 && a2 < 1) {
+    context.fillStyle = palette.dark ? 'rgba(255,196,120,' + (.07 * a1 * (1 - a2)) + ')' : 'rgba(150,100,50,' + (.12 * a1 * (1 - a2)) + ')';
+    context.fillRect(0, 0, w, h);
+    context.strokeStyle = palette.dark ? 'rgba(255,255,255,' + (.07 * a1 * (1 - a2)) + ')' : 'rgba(60,40,20,' + (.10 * a1 * (1 - a2)) + ')'; context.lineWidth = 3;
+    for (let i = 0; i < 3; i++) { const y = ((engine.camera * .25 + i * 190) % 570); context.strokeRect(w - 118, h - y + 40, 92, 62); }
+  }
+  if (a2 > 0) {
+    context.fillStyle = 'rgba(8,10,34,' + (.82 * a2) + ')';
+    context.fillRect(0, 0, w, h);
+    context.fillStyle = '#fff';
+    for (let i = 0; i < 38; i++) {
+      const sx = (i * 97.3) % w, base = (i * 61.7) % h;
+      const sy = h - ((base + engine.camera * (.12 + (i % 3) * .06)) % h);
+      context.globalAlpha = a2 * (.35 + (i % 4) * .15); context.fillRect(sx, sy, 1.6, 1.6);
+    }
+    context.globalAlpha = 1;
+  }
+}
+let zoneShown = 0, zoneBanner = null;
+function checkZone() {
+  const z = zoneIndex(engine.heightScore || 0);
+  if (z > zoneShown) { zoneShown = z; zoneBanner = { text: t(ZONES[z].key), until: performance.now() + 2200 }; announce('game.zoneAnnouncement', { zone: t(ZONES[z].key) }); }
+}
+// «Призрак»: лучший прошлый забег показывается полупрозрачным рюкзаком
+const ghostKey = 'schedule-jump-ghost-v1';
+let ghost = null, run = [], runClock = 0;
+try { const g = JSON.parse(localStorage.getItem(ghostKey) || 'null'); if (g && Array.isArray(g.run) && g.run.length > 5) ghost = g; } catch (error) {}
+function recordRun(dt) {
+  runClock += dt;
+  while (run.length < 4000 && run.length * .1 <= runClock) run.push([Math.round(engine.player.x), Math.round(engine.player.y)]);
+}
+function saveGhost() {
+  if (!run.length || engine.score < 1 || (ghost && ghost.score >= engine.score)) return;
+  ghost = { score: engine.score, run: run.slice() };
+  try { localStorage.setItem(ghostKey, JSON.stringify(ghost)); } catch (error) {}
+}
+function drawGhost(w, h) {
+  if (!ghost || mode !== 'playing') return;
+  const i = Math.min(ghost.run.length - 1, Math.floor(runClock / .1));
+  const [gx, gy] = ghost.run[i];
+  const y = h - (gy - engine.camera) - 35;
+  if (y < -40 || y > h + 20) return;
+  context.save(); context.globalAlpha = .32; context.fillStyle = palette.gold; rounded(gx - 14, y - 4, 28, 35, 8); context.fill();
+  context.globalAlpha = .55; context.fillStyle = palette.muted; context.font = '600 9px sans-serif'; context.textAlign = 'center'; context.fillText(t('game.ghost'), gx, y - 8);
+  context.restore();
+}
+function drawBanner() {
+  if (!zoneBanner || performance.now() > zoneBanner.until) { zoneBanner = null; return; }
+  const left = Math.min(1, (zoneBanner.until - performance.now()) / 500);
+  context.save(); context.globalAlpha = left; context.textAlign = 'center'; context.font = '700 17px sans-serif';
+  const tw = context.measureText(zoneBanner.text).width + 28;
+  context.fillStyle = palette.dark ? '#000000a0' : '#ffffffd0'; rounded(engine.width / 2 - tw / 2, 14, tw, 30, 15); context.fill();
+  context.fillStyle = palette.ink; context.fillText(zoneBanner.text, engine.width / 2, 35);
+  context.restore();
 }
 function resize() {
   const rect = canvas.getBoundingClientRect();
@@ -380,9 +536,13 @@ function tick(timestamp) {
   if (lastFrame !== null) accumulator += Math.min(.08, (timestamp - lastFrame) / 1000);
   lastFrame = timestamp;
   while (accumulator >= FIXED_STEP && engine.status === 'playing') {
-    engine.step(FIXED_STEP, { axis: Number(right) - Number(left), targetX: targetX === null ? undefined : targetX });
+    const manual = tiltMode() ? 0 : Number(right) - Number(left);
+    engine.step(FIXED_STEP, { axis: manual || tiltAxis, targetX: targetX === null || tiltMode() ? undefined : targetX });
+    recordRun(FIXED_STEP);
     accumulator -= FIXED_STEP;
   }
+  drainEvents();
+  checkZone();
   scoreNode.textContent = engine.score;
   if (engine.score > best) bestNode.textContent = engine.score;
   updateFuel();
@@ -392,7 +552,8 @@ function tick(timestamp) {
   }
   render();
   if (engine.status === 'gameover') {
-    mode = 'gameover'; saveBest(); clearInput(); setOverlay(); cancelFrame();
+    mode = 'gameover'; saveGhost(); saveBest(); clearInput(); setOverlay(); cancelFrame();
+    root.dispatchEvent(new CustomEvent('arcade:score', { detail: { game: 'jump', score: engine.score } }));
     announce('game.overAnnouncement', { score: engine.score, best });
     return;
   }
@@ -401,7 +562,8 @@ function tick(timestamp) {
 function play() {
   active = true;
   const resumed = mode === 'paused';
-  if (mode === 'ready' || mode === 'gameover') { engine.reset(); announcedJetpacks = 0; }
+  if (mode === 'ready' || mode === 'gameover') { engine.reset(); announcedJetpacks = 0; run = []; runClock = 0; zoneShown = 0; zoneBanner = null; }
+  if (root.scheduleArcade) root.scheduleArcade.unlockAudio();
   engine.resume();
   mode = 'playing'; clearInput(); setOverlay(); resize(); cancelFrame();
   scoreNode.textContent = engine.score;
@@ -412,6 +574,7 @@ function pause() {
   if (mode === 'playing') { mode = 'paused'; engine.pause(); saveBest(); clearInput(); cancelFrame(); setOverlay(); render(); }
 }
 root.scheduleGame = {
+  engine,
   activate() { active = true; resize(); setOverlay(); if (mode === 'playing' && frameId === null) frameId = requestAnimationFrame(tick); },
   deactivate() { pause(); active = false; clearInput(); cancelFrame(); },
   getState() { return { active, mode, score: engine.score, best: Math.max(best, engine.score), frameScheduled: frameId !== null, ...engine.getState() }; }
@@ -431,7 +594,7 @@ function bindDirection(button, direction) {
 bindDirection(leftButton, -1); bindDirection(rightButton, 1);
 const pointerPosition = event => { const rect = canvas.getBoundingClientRect(); return Math.max(0, Math.min(engine.width, (event.clientX - rect.left) / rect.width * engine.width)); };
 canvas.addEventListener('pointerdown', event => {
-  if (!active || mode !== 'playing') return;
+  if (!active || mode !== 'playing' || tiltMode()) return;
   event.preventDefault(); dragPointer = event.pointerId; canvas.setPointerCapture(event.pointerId); targetX = pointerPosition(event);
 });
 canvas.addEventListener('pointermove', event => { if (event.pointerId === dragPointer && mode === 'playing') { event.preventDefault(); targetX = pointerPosition(event); } });

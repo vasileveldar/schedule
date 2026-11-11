@@ -68,6 +68,7 @@ function dateText(iso) {
   const d = new Date(iso + 'T00:00:00');
   return new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long' }).format(d);
 }
+const authorLine = item => el('p', 'hw-author', t('hw.addedBy', { name: item.author }));
 function block(item) {
   const past = item.due < todayIso();
   const box = el('div', 'hw-block' + (past ? ' hw-past' : ''));
@@ -75,6 +76,7 @@ function block(item) {
   head.append(el('span', 'hw-badge', '✎'), el('strong', '', t('hw.dueTo', { date: dateText(item.due) })));
   if (past) head.append(el('span', 'hw-late', t('hw.past')));
   box.append(head, el('p', 'hw-text', item.text));
+  if (item.author) box.append(authorLine(item));
   for (const raw of item.links || []) {
     const href = safeLink(raw);
     if (!href) continue;
@@ -110,6 +112,7 @@ function renderHome() {
     const row = el('div', 'hw-home-row');
     const when = i.due === today ? t('hw.todayWord') : i.due === isoDate(tomorrow) ? t('hw.tomorrowWord') : dateText(i.due);
     row.append(el('strong', '', (names.get(i.lesson) || i.lesson.split('|')[2] || '') + ' — ' + when), el('p', 'hw-text', i.text));
+    if (i.author) row.append(authorLine(i));
     for (const raw of i.links || []) {
       const href = safeLink(raw);
       if (!href) continue;
@@ -236,6 +239,7 @@ function renderList() {
   for (const i of mine) {
     const row = el('article', 'hw-row');
     row.append(el('strong', '', names.get(i.lesson) || i.lesson.split('|').slice(0, 3).join(' · ')), el('span', 'hw-due', t('hw.dueTo', { date: dateText(i.due) })), el('p', 'hw-text', i.text));
+    if (i.author) row.append(authorLine(i));
     const edit = el('button', 'choice', t('hw.edit')); edit.type = 'button';
     const del = el('button', 'choice', t('hw.delete')); del.type = 'button';
     edit.addEventListener('click', () => {

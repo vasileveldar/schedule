@@ -16,7 +16,7 @@ function refreshLabels(){
 function navigate(next,focus=true,fromHistory=false){
   if(!screens[next])return;
   if(!fromHistory&&next!=='home'){depth+=1;try{history.pushState({screen:next,depth},'');}catch(_){}}
-  if(current==='game'&&window.scheduleGame)window.scheduleGame.deactivate();
+  if(current==='game'&&(window.scheduleArcade||window.scheduleGame))(window.scheduleArcade||window.scheduleGame).deactivate();
   current=next;
   for(const [key,screen] of Object.entries(screens))screen.hidden=key!==next;
   document.body.dataset.screen=next;
@@ -25,7 +25,7 @@ function navigate(next,focus=true,fromHistory=false){
   refreshLabels();
   window.scrollTo(0,0);
   if(focus)heading.focus({preventScroll:true});
-  if(next==='game'&&window.scheduleGame)window.scheduleGame.activate();
+  if(next==='game'&&(window.scheduleArcade||window.scheduleGame))(window.scheduleArcade||window.scheduleGame).activate();
   if(window.interfaceMotion)window.interfaceMotion.enter(screens[next]);
   syncTelegramBack();
 }

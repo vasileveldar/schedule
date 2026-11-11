@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="./css/settings.css">
 <link rel="stylesheet" href="./css/homework.css">
 <link rel="stylesheet" href="./css/home.css">
+<link rel="stylesheet" href="./css/arcade.css">
 </head>
 <body data-screen="home">
   <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="open-settings" class="settings-btn" type="button" data-open-screen="settings" data-i18n-aria-label="nav.settings" data-i18n-title="nav.settings" aria-label="Настройки" title="Настройки"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.7 7.7 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4z"/></svg></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
@@ -45,7 +46,7 @@
         <span class="menu-symbol platform-symbol" aria-hidden="true">P</span><span class="menu-copy"><strong>Platonus</strong><span data-i18n="menu.platonus">Личный кабинет</span></span><span class="menu-arrow" aria-hidden="true">↗</span>
       </a>
       <button class="menu-card game-card" type="button" data-open-screen="game">
-        <span class="menu-symbol jump-symbol" aria-hidden="true">↑</span><span class="menu-copy"><strong data-i18n="nav.game">Выше пары</strong><span data-i18n="menu.gameDetails">Прыжки, пружины и ракетный ранец</span><small data-i18n="menu.gameHint">Игра для короткого перерыва</small></span><span class="menu-arrow" aria-hidden="true">›</span>
+        <span class="menu-symbol jump-symbol" aria-hidden="true">↑</span><span class="menu-copy"><strong data-i18n="nav.game">Игры</strong><span data-i18n="menu.gameDetails">Прыжки, пружины и ракетный ранец</span><small data-i18n="menu.gameHint">Игра для короткого перерыва</small></span><span class="menu-arrow" aria-hidden="true">›</span>
       </button>
       <button class="menu-card homework-menu-card" id="hw-menu-card" type="button" data-open-screen="homework" hidden>
         <span class="menu-symbol platform-symbol" aria-hidden="true">✎</span>
@@ -84,7 +85,7 @@
   <p class="academic-date"><time datetime="2026-12-14" data-i18n="calendar.sessionStart">14</time><span aria-hidden="true">–</span><span class="day-status" data-i18n="calendar.to"> по </span><time datetime="2026-12-31" data-i18n="calendar.sessionEnd">31 декабря</time></p>
 </section>
 </main>
-  <main id="game-screen" class="game-shell" hidden data-i18n-aria-label="nav.gameAria" aria-label="Игра Выше пары"><div id="jump-game">
+  <main id="game-screen" class="game-shell" hidden data-i18n-aria-label="nav.gameAria" aria-label="Игры"><div id="jump-game">
   <div class="jg-heading">
     <div><p class="jg-kicker" data-i18n="game.kicker">ПЕРЕМЕНА</p><h2 data-i18n="game.title">Выше к знаниям</h2></div>
     <div class="jg-scores" aria-label="Счёт игры" data-i18n-aria-label="game.scoresAria"><div class="jg-stat"><span data-i18n="game.score">Счёт</span><strong id="jg-score">0</strong></div><div class="jg-stat jg-best"><span data-i18n="game.best">Рекорд</span><strong id="jg-best">0</strong></div></div>

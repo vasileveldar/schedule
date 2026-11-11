@@ -62,4 +62,5 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 .hw-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--burgundy); color: var(--selected-text, #fff); font-size: 12px; font-weight: 700; text-align: center; }
 .hw-home .hw-home-row { margin: 0; padding: 10px 14px; border-top: 1px solid var(--line); }
 .hw-home .hw-home-row + .hw-home-row { margin-top: 0; }
+.hw-author { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .hw-home-summary::after { transition: none; } }
