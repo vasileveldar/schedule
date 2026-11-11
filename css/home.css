@@ -1,0 +1,65 @@
+/* Компактный главный экран: шапка поменьше, шестерёнка в углу, плитки без лишних подписей. Загружается последним. */
+
+/* ---------- шапка на главном экране ---------- */
+body[data-screen="home"] header { padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 14px; }
+body[data-screen="home"] .header-top { margin: 0 0 6px; flex-wrap: nowrap; min-height: 34px; }
+body[data-screen="home"] h1 { font-size: clamp(26px, 7vw, 32px); }
+body[data-screen="home"] .subtitle { margin-top: 3px; font-size: 12px; }
+body[data-screen="home"] .header-art { opacity: .55; transform: scale(.8); transform-origin: right top; }
+
+/* шестерёнка: маленькая круглая кнопка в верхнем правом углу, только на главном экране */
+.settings-btn {
+  display: none; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; padding: 0; margin-left: auto;
+  border: 1px solid #ffffff40; border-radius: 50%; background: #ffffff14; color: #fffdf7; cursor: pointer;
+}
+body[data-screen="home"] .settings-btn { display: inline-flex; }
+.settings-btn:hover { background: #ffffff26; }
+.settings-btn:focus-visible { outline: 3px solid #e9b2c0; outline-offset: 2px; }
+@media (min-width: 900px) { .settings-btn { width: 40px; height: 40px; } }
+
+/* ---------- сетка плиток ---------- */
+#home-screen.home-shell { padding-top: 12px; }
+#home-screen .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#home-screen .menu-card[hidden] { display: none; }
+#home-screen .menu-card {
+  min-height: 0; padding: 12px 14px; gap: 11px; border-radius: 14px;
+}
+#home-screen .menu-card:after, #home-screen .menu-card:before { display: none; }
+#home-screen .menu-symbol { width: 38px; height: 38px; border-radius: 10px; font-size: 20px; box-shadow: none; }
+#home-screen .menu-copy { gap: 0; }
+#home-screen .menu-copy strong { font-size: 16px; letter-spacing: -.01em; line-height: 1.2; }
+/* пояснения под названиями и стрелки не заслуживают отдельного места */
+#home-screen .menu-copy > span, #home-screen .menu-copy small, #home-screen .menu-arrow { display: none; }
+
+/* главная плитка — расписание: на всю ширину и чуть крупнее */
+#home-screen .schedule-card { order: 1; grid-column: 1 / -1; padding: 15px 16px; }
+#home-screen .schedule-card .menu-symbol { width: 44px; height: 44px; font-size: 22px; }
+#home-screen .schedule-card .menu-copy strong { font-size: 19px; }
+#home-screen .academic-calendar-card { order: 2; }
+#home-screen .game-card { order: 3; }
+#home-screen .moodle-card { order: 4; }
+#home-screen .platonus-card { order: 5; }
+#home-screen .homework-menu-card { order: 6; grid-column: 1 / -1; }
+@media (max-width: 380px) {
+  #home-screen .menu-card { padding: 11px 10px; gap: 8px; }
+  #home-screen .menu-copy strong { font-size: 14.5px; }
+  #home-screen .menu-symbol { width: 34px; height: 34px; }
+}
+
+/* ---------- карточка «Следующая пара» ---------- */
+#home-screen .fork-next-card { margin: 0 0 10px; padding: 11px 14px; }
+#home-screen .fork-next-subject { font-size: 16px; line-height: 1.25; }
+#home-screen .fork-next-time { margin-top: 2px; font-size: 12px; }
+#home-screen .fork-next-status { margin-top: 4px; font-size: 12px; }
+
+/* ---------- раскрывающаяся карточка «Ближайшее д/з» ---------- */
+#home-screen .hw-home { margin: 0 0 10px; padding: 0; border-radius: 12px; overflow: hidden; }
+.hw-home-summary { display: flex; align-items: center; gap: 9px; padding: 10px 14px; cursor: pointer; list-style: none; color: var(--ink); font-size: 14px; }
+.hw-home-summary::-webkit-details-marker { display: none; }
+.hw-home-summary::after { content: ""; flex: none; width: 8px; height: 8px; margin: -3px 4px 0 auto; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .18s ease; }
+.hw-home[open] .hw-home-summary::after { transform: rotate(225deg); margin-top: 3px; }
+.hw-home-summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.hw-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--burgundy); color: var(--selected-text, #fff); font-size: 12px; font-weight: 700; text-align: center; }
+.hw-home .hw-home-row { margin: 0; padding: 10px 14px; border-top: 1px solid var(--line); }
+.hw-home .hw-home-row + .hw-home-row { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .hw-home-summary::after { transition: none; } }

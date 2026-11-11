@@ -1,12 +1,13 @@
 ﻿'use strict';
 
-const CACHE = 'schedule-in251-6a97ef0fcb02';
+const CACHE = 'schedule-in251-d4d4456f90d9';
 const SHELL = [
   "./",
   "./apple-touch-icon.png",
   "./css/android.css",
   "./css/base.css",
   "./css/design.css",
+  "./css/home.css",
   "./css/homework.css",
   "./css/settings.css",
   "./css/themes.css",

@@ -22,11 +22,11 @@
 <link rel="stylesheet" href="./css/themes.css">
 <link rel="stylesheet" href="./css/settings.css">
 <link rel="stylesheet" href="./css/homework.css">
+<link rel="stylesheet" href="./css/home.css">
 </head>
 <body data-screen="home">
-  <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
+  <header><div class="header-art" aria-hidden="true"></div><div class="inner"><div class="header-top"><p class="eyebrow" id="header-eyebrow" data-i18n="app.eyebrow">Учебная неделя</p><button id="back-menu" class="back-menu" type="button" hidden data-i18n="nav.back" data-i18n-aria-label="nav.backAria" aria-label="Вернуться в главное меню">‹ В меню</button><button id="open-settings" class="settings-btn" type="button" data-open-screen="settings" data-i18n-aria-label="nav.settings" data-i18n-title="nav.settings" aria-label="Настройки" title="Настройки"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.7 7.7 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.9 2-3.4z"/></svg></button></div><div class="header-title-row"><h1 id="page-title" tabindex="-1"></h1></div><p class="subtitle" id="subtitle" data-i18n="app.subtitle"></p></div></header>
   <main id="home-screen" class="home-shell" data-i18n-aria-label="nav.home" aria-label="Главное меню">
-    <p class="menu-caption" data-i18n="menu.caption">Всё для учебного дня</p>
     <div class="menu-grid">
       <button class="menu-card schedule-card" type="button" data-open-screen="schedule">
         <span class="menu-symbol calendar-symbol" aria-hidden="true">25</span>
@@ -35,7 +35,7 @@
       </button>
       <button class="menu-card academic-calendar-card" type="button" data-open-screen="calendar">
         <span class="menu-symbol calendar-symbol" aria-hidden="true">01</span>
-        <span class="menu-copy"><strong data-i18n="nav.calendar">Академический календарь</strong><span data-i18n="menu.calendarDetails">Учебный период, рубежные контроли и сессия</span><small data-i18n="calendar.term">1 семестр · сентябрь–декабрь 2026</small></span>
+        <span class="menu-copy"><strong data-i18n="menu.calendarShort">Календарь</strong><span data-i18n="menu.calendarDetails">Учебный период, рубежные контроли и сессия</span><small data-i18n="calendar.term">1 семестр · сентябрь–декабрь 2026</small></span>
         <span class="menu-arrow" aria-hidden="true">›</span>
       </button>
       <a class="menu-card moodle-card" href="https://dot.bolashaq.edu.kz/moodle/" data-i18n-aria-label="menu.openMoodle" aria-label="Открыть Moodle в браузере">
@@ -52,12 +52,7 @@
         <span class="menu-copy"><strong data-i18n="nav.homework">Домашние задания</strong><span data-i18n="hw.menuDetails">Добавить и изменить задания к парам</span></span>
         <span class="menu-arrow" aria-hidden="true">›</span>
       </button>
-      <button class="menu-card settings-menu-card" type="button" data-open-screen="settings">
-        <span class="menu-symbol platform-symbol" aria-hidden="true">⚙</span>
-        <span class="menu-copy"><strong data-i18n="nav.settings">Настройки</strong><span data-i18n="menu.settingsDetails">Язык, тема, уведомления</span></span>
-        <span class="menu-arrow" aria-hidden="true">›</span>
-      </button>    </div>
-    <p class="menu-footnote" data-i18n="menu.footnote">Moodle и Platonus открываются в браузере и требуют интернета.</p>
+    </div>
   </main>
   <section id="schedule-screen" hidden data-i18n-aria-label="nav.schedule" aria-label="Расписание">
   <div class="control-wrap"><div class="controls">

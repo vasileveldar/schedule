@@ -84,21 +84,28 @@ function block(item) {
   }
   return box;
 }
-// Блок «Ближайшее д/з» на главном экране: задания к сегодняшнему и завтрашнему дню
+// Карточка «Ближайшее д/з» на главной: свёрнута по умолчанию, внутри только актуальные задания (срок не прошёл)
+const HOME_OPEN_KEY = 'schedule-hw-open';
 function renderHome() {
   const home = document.getElementById('home-screen');
   if (!home) return;
+  const wasOpen = (() => { try { return localStorage.getItem(HOME_OPEN_KEY) === '1'; } catch (_) { return false; } })();
   home.querySelectorAll('.hw-home').forEach(n => n.remove());
-  const t0 = new Date(); const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-  const soon = items.filter(i => i.due === isoDate(t0) || i.due === isoDate(tomorrow));
-  if (!soon.length) return;
+  const today = todayIso();
+  const actual = items.filter(i => i.due >= today).sort((a, b) => a.due.localeCompare(b.due) || a.id - b.id);
+  if (!actual.length) return;
   const names = new Map();
   if (data) for (const e of data.events) names.set(keyOf(e.day, e.start, e.subject, e.group), i18n.content('subjects', e.subject));
-  const box = el('section', 'hw-home');
-  box.append(el('h2', 'hw-title', t('hw.homeTitle')));
-  for (const i of soon.slice(0, 5)) {
+  const box = el('details', 'hw-home');
+  box.open = wasOpen;
+  const sum = el('summary', 'hw-home-summary');
+  sum.append(el('span', 'hw-badge', '✎'), el('strong', '', t('hw.homeTitle')), el('span', 'hw-count', String(actual.length)));
+  box.append(sum);
+  box.addEventListener('toggle', () => { try { localStorage.setItem(HOME_OPEN_KEY, box.open ? '1' : '0'); } catch (_) {} });
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  for (const i of actual.slice(0, 8)) {
     const row = el('div', 'hw-home-row');
-    const when = i.due === isoDate(t0) ? t('hw.todayWord') : t('hw.tomorrowWord');
+    const when = i.due === today ? t('hw.todayWord') : i.due === isoDate(tomorrow) ? t('hw.tomorrowWord') : dateText(i.due);
     row.append(el('strong', '', (names.get(i.lesson) || i.lesson.split('|')[2] || '') + ' — ' + when), el('p', 'hw-text', i.text));
     for (const raw of i.links || []) {
       const href = safeLink(raw);
@@ -247,6 +254,14 @@ function renderList() {
 }
 
 // ---------- запуск ----------
+// карточка д/з всегда идёт сразу после карточки «Следующая пара» (её добавляет android.js чуть позже)
+{
+  const home = document.getElementById('home-screen');
+  if (home) new MutationObserver(() => {
+    const box = home.querySelector('.hw-home'), next = home.querySelector('.fork-next-card');
+    if (box && next && next.nextElementSibling !== box) next.after(box);
+  }).observe(home, { childList: true });
+}
 window.scheduleHomework = { reload: loadItems };
 if (nativeApp) { try { bridge.refreshHomework(); } catch (_) {} }
 loadItems();
