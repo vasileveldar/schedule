@@ -71,6 +71,19 @@ bindTelegram();
 back.addEventListener('click',goHome);
 window.appNavigateBack=()=>goHome();
 window.scheduleApp={navigate,getScreen:()=>current};
+// Внешние ссылки (Moodle, Platonus, ссылки из д/з) не должны уводить само приложение со страницы:
+// в Telegram открываем через openLink (внешний браузер), на сайте/PWA — в новой вкладке. В APK это делает Android-часть.
+document.addEventListener('click',event=>{
+  const a=event.target.closest&&event.target.closest('a[href]');
+  if(!a||window.AppPreferences||event.defaultPrevented)return;
+  let url;try{url=new URL(a.href,location.href);}catch(_){return;}
+  if(url.origin===location.origin||(url.protocol!=='https:'&&url.protocol!=='http:'))return;
+  const tg=window.Telegram&&window.Telegram.WebApp;
+  if(tg&&typeof tg.openLink==='function'){
+    event.preventDefault();
+    try{tg.openLink(url.toString());}catch(_){window.open(url.toString(),'_blank','noopener');}
+  }else{a.target='_blank';a.rel='noopener noreferrer';}
+});
 window.addEventListener('language:change',refreshLabels);
 navigate('home',false);
 })();
