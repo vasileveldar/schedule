@@ -92,10 +92,13 @@ function renderHome() {
   const wasOpen = (() => { try { return localStorage.getItem(HOME_OPEN_KEY) === '1'; } catch (_) { return false; } })();
   home.querySelectorAll('.hw-home').forEach(n => n.remove());
   const today = todayIso();
-  const actual = items.filter(i => i.due >= today).sort((a, b) => a.due.localeCompare(b.due) || a.id - b.id);
+  const names = new Map(), ends = new Map();
+  if (data) for (const e of data.events) { const k = keyOf(e.day, e.start, e.subject, e.group); names.set(k, i18n.content('subjects', e.subject)); ends.set(k, clock(e.end)); }
+  // актуально: срок в будущем, а на сегодня — пока пара ещё не закончилась (без времени окончания — до конца дня)
+  const now = new Date(), nowClock = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  const actual = items.filter(i => i.due > today || (i.due === today && (!ends.get(i.lesson) || ends.get(i.lesson) > nowClock)))
+    .sort((a, b) => a.due.localeCompare(b.due) || a.id - b.id);
   if (!actual.length) return;
-  const names = new Map();
-  if (data) for (const e of data.events) names.set(keyOf(e.day, e.start, e.subject, e.group), i18n.content('subjects', e.subject));
   const box = el('details', 'hw-home');
   box.open = wasOpen;
   const sum = el('summary', 'hw-home-summary');
@@ -138,6 +141,7 @@ function render() {
 document.addEventListener('schedule:render', render);
 window.addEventListener('load', () => setTimeout(renderHome, 600));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderHome(); });
+setInterval(() => { if (!document.hidden) renderHome(); }, 60000); // задания исчезают, как только пара закончилась
 window.addEventListener('language:change', () => { render(); if (formBuilt) buildForm(); });
 
 // ---------- форма редактора ----------
