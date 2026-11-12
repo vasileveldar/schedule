@@ -39,6 +39,7 @@ body[data-screen="home"] .settings-btn { display: inline-flex; }
 #home-screen .game-card { order: 3; }
 #home-screen .moodle-card { order: 4; }
 #home-screen .platonus-card { order: 5; }
+#home-screen .german-card { order: 3; }
 #home-screen .homework-menu-card { order: 6; grid-column: 1 / -1; }
 /* Компьютер: контент по ширине шапки, плитки в четыре колонки */
 @media (min-width: 900px) {

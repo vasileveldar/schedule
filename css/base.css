@@ -171,6 +171,7 @@ header .inner{position:relative;z-index:1}
 .schedule-card{--menu-accent:var(--burgundy);border-top:1px solid var(--line);background:linear-gradient(118deg,var(--surface) 50%,var(--menu-tint));min-height:143px}
 .moodle-card{--menu-accent:var(--gold)}
 .platonus-card{--menu-accent:var(--inclusive-edge)}
+.german-card{--menu-accent:var(--burgundy)}
 .game-card{--menu-accent:var(--gold);background:linear-gradient(120deg,var(--inclusive-bg),var(--surface));min-height:139px}
 .menu-symbol{position:relative;width:54px;height:56px;border-radius:12px;box-shadow:0 3px 0 var(--line);font-size:29px;background:var(--button)}
 .calendar-symbol{border-top-width:9px;transform:rotate(-3deg);font-size:26px;color:var(--ink);background:var(--paper);border-radius:9px}

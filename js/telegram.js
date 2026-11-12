@@ -11,6 +11,13 @@
     document.documentElement.classList.add('in-telegram');
     try { tg.ready(); tg.expand(); } catch (e) {}
     document.dispatchEvent(new CustomEvent('telegram:ready'));
+    // ссылки на другие Mini App бота открываем средствами Telegram, а не как обычную страницу
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[data-tg-link]');
+      if (!a || !tg.openTelegramLink) return;
+      e.preventDefault();
+      try { tg.openTelegramLink(a.href); } catch (err) { window.open(a.href, '_blank'); }
+    });
     function sync() {
       var bg = getComputedStyle(document.body).backgroundColor;
       var m = bg.match(/\d+/g);
