@@ -4,7 +4,7 @@
   const labels = {
     ru: {
       next: 'Следующая пара', now: 'Сейчас идёт', today: 'Сегодня', noClass: 'Ближайших занятий нет',
-      starts: 'Начнётся через {time}', ends: 'До конца пары {time}',
+      starts: 'Начнётся через {time}', ends: 'Закончится через {time}',
       search: 'Поиск по расписанию', searchPlaceholder: 'Предмет, преподаватель или аудитория',
       searchEmpty: 'Совпадений не найдено. Измените запрос.', current: 'Сейчас',
       reminder: 'Напоминать о парах', reminderHint: 'Уведомление за 5 минут до начала пары',
@@ -159,8 +159,7 @@
     const room = (window.scheduleOverrides && window.scheduleOverrides.roomFor(item.event, item.start)) || item.event.room;
     setText(nextTime, `${item.event.start}–${item.event.end}${room ? ` · ${room}` : ''}`);
     if (active) {
-      const next = entries.find(candidate => candidate.start >= item.end);
-      nextStatus.textContent = next ? replace(t('starts'), { time: countdown(next.start - now) }) : replace(t('ends'), { time: countdown(item.end - now) });
+      nextStatus.textContent = replace(t('ends'), { time: countdown(item.end - now) });
     } else if (iso(item.start) === iso(now)) {
       nextStatus.textContent = replace(t('starts'), { time: countdown(item.start - now) });
     } else {
