@@ -16,7 +16,8 @@
       var a = e.target.closest && e.target.closest('a[data-tg-link]');
       if (!a || !tg.openTelegramLink) return;
       e.preventDefault();
-      try { tg.openTelegramLink(a.href); } catch (err) { window.open(a.href, '_blank'); }
+      // в Telegram — Mini App по ссылке t.me, вне Telegram (PWA, APK) — обычный адрес в браузере (href)
+      try { tg.openTelegramLink(a.getAttribute('data-tg-link')); } catch (err) { window.open(a.href, '_blank'); }
     });
     function sync() {
       var bg = getComputedStyle(document.body).backgroundColor;
