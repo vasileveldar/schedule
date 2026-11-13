@@ -1,19 +1,10 @@
 ﻿'use strict';
 
-const CACHE = 'schedule-in251-2fe6ece2958c';
+const CACHE = 'schedule-in251-f492037eeb11';
 const SHELL = [
   "./",
   "./apple-touch-icon.png",
-  "./css/android.css",
-  "./css/arcade.css",
-  "./css/base.css",
-  "./css/design.css",
-  "./css/editor.css",
-  "./css/fx.css",
-  "./css/home.css",
-  "./css/homework.css",
-  "./css/settings.css",
-  "./css/themes.css",
+  "./css/app.css",
   "./data/app-config.json",
   "./data/assessment.json",
   "./data/schedule.json",
@@ -22,27 +13,11 @@ const SHELL = [
   "./icon-512.png",
   "./icon-maskable.png",
   "./index.html",
-  "./js/arcade.js",
+  "./js/app.js",
   "./js/boot.js",
-  "./js/comfort.js",
-  "./js/editor.js",
-  "./js/fx.js",
-  "./js/g2048.js",
-  "./js/game.js",
-  "./js/home.js",
-  "./js/homework.js",
-  "./js/i18n.js",
-  "./js/motion.js",
-  "./js/navigation.js",
-  "./js/overrides.js",
-  "./js/owner.js",
-  "./js/reports.js",
-  "./js/scores.js",
-  "./js/tabbar.js",
+  "./js/lazy-game.js",
+  "./js/lazy-owner.js",
   "./js/telegram.js",
-  "./js/theme.js",
-  "./js/touch.js",
-  "./js/ui.js",
   "./manifest.webmanifest"
 ];
 

@@ -1,7 +1,9 @@
 /* Загрузчик: подтягивает данные (data/*.json), затем подключает скрипты приложения по порядку. */
 (function () {
   'use strict';
-  var APP_SCRIPTS = ['js/i18n.js', 'js/theme.js', 'js/ui.js', 'js/scores.js', 'js/game.js', 'js/arcade.js', 'js/g2048.js', 'js/motion.js', 'js/navigation.js', 'js/homework.js', 'js/overrides.js', 'js/editor.js', 'js/reports.js', 'js/tabbar.js', 'js/owner.js', 'js/touch.js', 'js/home.js', 'js/comfort.js', 'js/fx.js']; /*SCRIPTS*/
+  var APP_SCRIPTS = ['js/app.js']; /*SCRIPTS*/
+  // грузятся при первом использовании: игры — при открытии вкладки «Игры», «Управление» — когда вошёл владелец
+  var LAZY = {"game": ["js/lazy-game.js"], "owner": ["js/lazy-owner.js"]}; /*LAZY*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
   var CACHE_KEY = 'schedule-json-cache';
   var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
@@ -19,6 +21,25 @@
       document.body.appendChild(s);
     });
   }
+  // все скрипты запрашиваются сразу, а выполняются строго по порядку списка (async = false), поэтому поведение прежнее
+  function loadAll(list) {
+    return Promise.all(list.map(function (src) { return load(src); }));
+  }
+  var lazyLoads = {};
+  window.scheduleLazy = {
+    load: function (name) {
+      if (!LAZY[name]) return Promise.resolve();
+      if (!lazyLoads[name]) {
+        lazyLoads[name] = loadAll(LAZY[name]).then(function () {
+          window.dispatchEvent(new CustomEvent('lazy:loaded', { detail: name }));
+        }, function (err) { lazyLoads[name] = null; throw err; });
+      }
+      return lazyLoads[name];
+    }
+  };
+  window.addEventListener('role:change', function (e) {
+    if (e.detail && e.detail.role === 'owner') window.scheduleLazy.load('owner').catch(function () {});
+  });
   function getText(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw new Error(url + ' ' + r.status);
@@ -53,12 +74,11 @@
   Promise.all([
     getSchedule(),
     getText(DATA['assessment-data']),
-    getText(DATA['translation-data'])
+    getText(DATA['translation-data']),
+    getText(OPTIONAL['app-config']).then(function (t) { JSON.parse(t); return t; }, function () { return '{}'; })
   ]).then(function (r) {
-    put('schedule-data', r[0]); put('assessment-data', r[1]); put('translation-data', r[2]);
-    return getText(OPTIONAL['app-config']).then(function (t) { JSON.parse(t); put('app-config', t); }, function () { put('app-config', '{}'); });
-  }).then(function () {
-    return APP_SCRIPTS.reduce(function (p, src) { return p.then(function () { return load(src); }); }, Promise.resolve());
+    put('schedule-data', r[0]); put('assessment-data', r[1]); put('translation-data', r[2]); put('app-config', r[3]);
+    return loadAll(APP_SCRIPTS);
   }).catch(fail);
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !window.AppPreferences) {
