@@ -20,6 +20,7 @@ async function api(method, path, body) {
 
 let stats = null, users = [], filter = '', loadedAt = 0, loading = false, summaryText = '', pingMs = null, release = null;
 let broadcastText = '';
+let analytics = null; // анонимная статистика
 let feedback = [];   // обращения («Сообщить об ошибке или идее»)
 let replyOpen = 0;   // id обращения, под которым открыто поле ответа
 let replyText = '';
@@ -34,9 +35,9 @@ async function refresh(force) {
   loading = true; render();
   try {
     const t0 = performance.now();
-    const [s, u, rel, fb] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release'), api('GET', '/api/admin/feedback')]);
+    const [s, u, rel, fb, an] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release'), api('GET', '/api/admin/feedback'), api('GET', '/api/admin/analytics?days=14')]);
     pingMs = Math.round(performance.now() - t0);
-    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null; feedback = fb.ok && Array.isArray(fb.body) ? fb.body : [];
+    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null; feedback = fb.ok && Array.isArray(fb.body) ? fb.body : []; analytics = an.ok && an.body && an.body.now ? an.body : null;
     if (!s.ok || !u.ok) toast(s.status === 403 || u.status === 403 ? 'Нет доступа: откройте приложение из Telegram.' : 'Не удалось загрузить данные.');
     loadedAt = Date.now();
   } catch (_) { toast('Нет связи с облаком.'); }
@@ -111,6 +112,7 @@ function render() {
   }
 
   renderFeedback();
+  renderAnalytics();
 
   // пользователи
   const box = section('Пользователи');
@@ -151,6 +153,47 @@ function render() {
   tools.append(el('p', 'hw-hint', 'Сборка APK, публикация сайта, выкатка облака и резервная копия ключа подписи — только в центре управления на компьютере.'));
   root.append(tools);
   window.scrollTo(0, keepScroll);
+}
+
+// ---------- анонимная статистика ----------
+const SCREEN_NAME = { home: 'Главная', schedule: 'Расписание', calendar: 'Календарь', game: 'Игры', settings: 'Настройки', homework: 'Д/з', owner: 'Управление' };
+const FEATURE_NAME = { share: 'Поделиться парой', done: 'Отметка «Сделано»', search: 'Поиск', history: 'История д/з', report: 'Сообщить об ошибке' };
+const LANG_NAME = { ru: 'Русский', en: 'English', de: 'Deutsch' };
+function bars(title, list, names) {
+  const wrap = el('div', 'ow-bars');
+  wrap.append(el('h3', 'ow-subhead', title));
+  const max = Math.max(1, ...list.map(x => x.n));
+  if (!list.length) wrap.append(el('p', 'ow-meta', 'нет данных'));
+  for (const x of list.slice(0, 8)) {
+    const row = el('div', 'ow-bar');
+    const fill = el('i'); fill.style.width = Math.max(3, Math.round(x.n / max * 100)) + '%';
+    const track = el('span', 'ow-bar-track'); track.append(fill);
+    row.append(el('span', 'ow-bar-name', (names && names[x.key]) || x.key), track, el('b', '', String(x.n)));
+    wrap.append(row);
+  }
+  return wrap;
+}
+function renderAnalytics() {
+  if (!analytics) return;
+  const a = analytics;
+  const box = section('Статистика (анонимная, ' + a.days + ' дн.)');
+  if (!a.hasData) { box.append(el('p', 'hw-hint', 'Данных пока нет: статистика начинает копиться, когда люди откроют обновлённое приложение.')); root.append(box); return; }
+  const grid = el('div', 'ow-grid');
+  grid.append(tile(a.now.day, 'активных сегодня'), tile(a.now.week, 'за неделю' + (a.now.prevWeek ? ' (прошлая: ' + a.now.prevWeek + ')' : '')), tile(a.now.month, 'за месяц'), tile(a.returning, 'вернулись за ' + a.days + ' дн.'));
+  box.append(grid);
+  // активные по дням
+  const maxDay = Math.max(1, ...a.series.map(x => x.n));
+  const spark = el('div', 'ow-spark'); spark.setAttribute('role', 'img'); spark.setAttribute('aria-label', 'Активные устройства по дням');
+  for (const d of a.series) { const c = el('div', 'ow-spark-col'); const i = el('i'); i.style.height = Math.max(4, Math.round(d.n / maxDay * 100)) + '%'; c.title = d.day + ': ' + d.n; c.append(i, el('span', '', d.day.slice(8))); spark.append(c); }
+  box.append(el('h3', 'ow-subhead', 'Активные по дням'), spark);
+  box.append(bars('Платформы', a.platform), bars('Версии приложения', a.version.map(x => ({ ...x, key: 'v' + x.key }))), bars('Экраны', a.screen, SCREEN_NAME), bars('Функции', a.feature, FEATURE_NAME), bars('Языки', a.lang, LANG_NAME), bars('Темы', a.theme));
+  // часы активности
+  const maxHour = Math.max(1, ...a.hour.map(x => x.n));
+  const hours = el('div', 'ow-spark ow-hours');
+  for (const h of a.hour) { const c = el('div', 'ow-spark-col'); const i = el('i'); i.style.height = Math.max(h.n ? 4 : 1, Math.round(h.n / maxHour * 100)) + '%'; c.title = h.key + ':00 — ' + h.n; c.append(i, el('span', '', Number(h.key) % 3 === 0 ? h.key : '')); hours.append(c); }
+  box.append(el('h3', 'ow-subhead', 'Часы активности (Алматы)'), hours);
+  box.append(el('p', 'hw-hint', 'Считаются только устройства без имён и ID. Каждый человек — максимум раз в день. Выключатель у пользователей: «Настройки → Ещё».'));
+  root.append(box);
 }
 
 // ---------- обращения ----------

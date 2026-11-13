@@ -64,6 +64,7 @@ function openSheet(title) {
 // ---------- история д/з ----------
 const HIST_CACHE = 'schedule-hw-history';
 function openHistory() {
+  if (window.scheduleStats) window.scheduleStats.track('feature', 'history');
   const sheet = openSheet(tr('histTitle'));
   const note = el('p', 'ed-sub', tr('histNote'));
   const subject = el('select', 'ed-input'); subject.setAttribute('aria-label', tr('all'));
@@ -132,6 +133,7 @@ function techInfo() {
   return info;
 }
 function openReport() {
+  if (window.scheduleStats) window.scheduleStats.track('feature', 'report');
   const sheet = openSheet(tr('repTitle'));
   const kind = el('select', 'ed-input'); kind.setAttribute('aria-label', tr('kind'));
   for (const [v, k] of [['idea', 'kIdea'], ['bug', 'kBug'], ['question', 'kQuestion']]) { const o = el('option', '', tr(k)); o.value = v; kind.append(o); }
@@ -180,5 +182,5 @@ function paint() {
 }
 window.addEventListener('language:change', paint);
 paint();
-window.scheduleReports = { openHistory, openReport };
+window.scheduleReports = { openHistory, openReport, openSheet };
 })();
