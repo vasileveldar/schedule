@@ -45,6 +45,10 @@ body.ed-open { overflow: hidden; }
 /* ---------- «Мой доступ» ---------- */
 .ed-subcopy { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 15px; font-weight: 600; }
 .ed-subcopy small { color: var(--muted); font-size: 12px; font-weight: 500; }
+#access-settings .settings-row .fork-switch { flex: none; width: 46px; }
+.ed-notify { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--line); }
+.ed-subhead { margin: 8px 0 4px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.ed-notify .language-select { flex: none; max-width: 150px; }
 
 /* ---------- фото к д/з ---------- */
 .hw-photos { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }

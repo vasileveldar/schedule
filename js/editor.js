@@ -16,6 +16,8 @@ const L = {
     errNet: 'Нет связи с облаком. Попробуйте ещё раз.', errForbidden: 'Нет прав на это действие.', errRate: 'Слишком много действий, попробуйте позже.', errRange: 'Дата должна быть в ближайшие 14 дней.', errInvalid: 'Проверьте поля.', photoFail: 'Задание сохранено, но фото загрузить не удалось.',
     accessTitle: 'Мой доступ', role: 'Роль', rReader: 'Читатель', rEditor: 'Редактор', rOwner: 'Владелец', rNone: 'Доступ не одобрен', sub: 'Сообщения об изменениях в Telegram', subNote: 'Бот пришлёт, если пару отменят или заменят.',
     request: 'Запросить права редактора', requested: 'Запрос отправлен владельцу. Ответ придёт в Telegram.', requestWait: 'Запрос уже отправлен, повторить можно через сутки.', outside: 'Роль, права редактора и подписка настраиваются через Telegram: откройте приложение из бота.', editorNote: 'Вы можете отмечать изменения прямо в карточках пар и добавлять д/з.',
+    nfTitle: 'Уведомления в Telegram', nfRemind: 'Напоминания о парах', nfRemindNote: 'Бот напишет перед началом пары. Об отменённых парах не напоминает.', nfOff: 'Выкл', nfMin: 'за {n} мин',
+    nfOverrides: 'Отмены и замены пар', nfChanges: 'Расписание обновилось', nfVersions: 'Новые версии приложения', nfQuiet: 'Тихие часы', nfQuietNote: 'В это время сообщения приходят без звука, напоминаний нет.', nfSubOff: 'Сначала включите подписку выше: без неё эти сообщения не приходят (напоминания работают отдельно).',
   },
   en: {
     addHw: '＋ Homework', change: '⋯ Change', sheetHw: 'New homework', sheetOv: 'Change this class', date: 'Date', due: 'Due date', text: 'Task', textPh: 'What was assigned', links: 'Links (one per line)', photos: 'Photos',
@@ -25,6 +27,8 @@ const L = {
     errNet: 'No connection to the cloud. Try again.', errForbidden: 'You are not allowed to do this.', errRate: 'Too many actions, try again later.', errRange: 'The date must be within the next 14 days.', errInvalid: 'Check the fields.', photoFail: 'Homework saved, but the photo could not be uploaded.',
     accessTitle: 'My access', role: 'Role', rReader: 'Reader', rEditor: 'Editor', rOwner: 'Owner', rNone: 'Access not approved', sub: 'Schedule change messages in Telegram', subNote: 'The bot will message you if a class is cancelled or changed.',
     request: 'Request editor access', requested: 'Request sent to the owner. The answer will come in Telegram.', requestWait: 'Already requested; you can ask again in a day.', outside: 'Role, editor access and subscription are managed through Telegram: open the app from the bot.', editorNote: 'You can mark changes right on class cards and add homework.',
+    nfTitle: 'Telegram notifications', nfRemind: 'Class reminders', nfRemindNote: 'The bot writes before a class starts. Cancelled classes are skipped.', nfOff: 'Off', nfMin: '{n} min before',
+    nfOverrides: 'Cancelled or changed classes', nfChanges: 'Schedule updated', nfVersions: 'New app versions', nfQuiet: 'Quiet hours', nfQuietNote: 'Messages arrive silently at this time; no reminders.', nfSubOff: 'Turn on the subscription above first: without it these messages are not sent (reminders work separately).',
   },
   de: {
     addHw: '＋ Hausaufg.', change: '⋯ Ändern', sheetHw: 'Neue Hausaufgabe', sheetOv: 'Stunde ändern', date: 'Datum', due: 'Abgabe', text: 'Aufgabe', textPh: 'Was aufgegeben wurde', links: 'Links (einer pro Zeile)', photos: 'Fotos',
@@ -34,6 +38,8 @@ const L = {
     errNet: 'Keine Verbindung zur Cloud. Bitte erneut versuchen.', errForbidden: 'Dazu fehlt die Berechtigung.', errRate: 'Zu viele Aktionen, später erneut versuchen.', errRange: 'Das Datum muss in den nächsten 14 Tagen liegen.', errInvalid: 'Felder prüfen.', photoFail: 'Aufgabe gespeichert, Foto konnte nicht hochgeladen werden.',
     accessTitle: 'Mein Zugang', role: 'Rolle', rReader: 'Leser', rEditor: 'Editor', rOwner: 'Inhaber', rNone: 'Zugang nicht freigegeben', sub: 'Änderungen am Stundenplan in Telegram', subNote: 'Der Bot meldet sich, wenn eine Stunde entfällt oder geändert wird.',
     request: 'Editor-Rechte anfragen', requested: 'Anfrage an den Inhaber gesendet. Die Antwort kommt in Telegram.', requestWait: 'Bereits angefragt, in einem Tag erneut möglich.', outside: 'Rolle, Editor-Rechte und Abo werden über Telegram verwaltet: App über den Bot öffnen.', editorNote: 'Du kannst Änderungen direkt an den Stundenkarten markieren und Hausaufgaben hinzufügen.',
+    nfTitle: 'Telegram-Benachrichtigungen', nfRemind: 'Erinnerung vor der Stunde', nfRemindNote: 'Der Bot schreibt vor Beginn der Stunde. Entfallene Stunden werden übersprungen.', nfOff: 'Aus', nfMin: '{n} Min. vorher',
+    nfOverrides: 'Entfallene oder geänderte Stunden', nfChanges: 'Stundenplan aktualisiert', nfVersions: 'Neue App-Versionen', nfQuiet: 'Ruhezeiten', nfQuietNote: 'In dieser Zeit kommen Nachrichten ohne Ton, keine Erinnerungen.', nfSubOff: 'Zuerst oben das Abo einschalten: ohne Abo kommen diese Nachrichten nicht (Erinnerungen laufen separat).',
   },
 };
 const lang = () => i18n.getLanguage() || 'ru';
@@ -202,6 +208,45 @@ function buildAccess() {
   if (notify) notify.before(accessBox); else settings.append(accessBox);
 }
 function roleLabel(role) { return role === 'owner' ? tr('rOwner') : role === 'editor' ? tr('rEditor') : role === 'reader' ? tr('rReader') : tr('rNone'); }
+// Настройки уведомлений (виды, тихие часы, напоминания): сохраняются в облаке сразу при изменении
+const QUIET = [null, [22, 7], [23, 8], [0, 9]];
+const quietName = q => (q ? pad(q[0]) + ':00–' + pad(q[1]) + ':00' : tr('nfOff'));
+async function savePrefs(patch) {
+  const res = await api('POST', '/api/me/prefs', patch);
+  if (!res.ok) throw new Error(String(res.status));
+  hw.setMe({ notify: res.body });
+}
+function paintNotify(me) {
+  const nf = me.notify;
+  const group = el('div', 'ed-notify');
+  group.append(el('h3', 'ed-subhead', tr('nfTitle')));
+  if (!me.subscribed) group.append(el('p', 'settings-note', tr('nfSubOff')));
+  const pick = (label, note, options, current, key) => {
+    const row = el('div', 'settings-row');
+    const copy = el('div', 'ed-subcopy'); copy.append(el('span', '', label)); if (note) copy.append(el('small', '', note));
+    const sel = el('select', 'language-select'); sel.setAttribute('aria-label', label);
+    options.forEach(([value, text]) => { const o = el('option', '', text); o.value = value; sel.append(o); });
+    sel.value = current;
+    sel.addEventListener('change', async () => {
+      const prev = current;
+      try { await savePrefs({ [key]: key === 'remind' ? Number(sel.value) : JSON.parse(sel.value) }); current = sel.value; }
+      catch (_) { sel.value = prev; toast(tr('errNet')); }
+    });
+    row.append(copy, sel); group.append(row);
+  };
+  pick(tr('nfRemind'), tr('nfRemindNote'), [['0', tr('nfOff')], ...[5, 10, 15].map(n => [String(n), tr('nfMin', { n })])], String(nf.remind || 0), 'remind');
+  [['overrides', 'nfOverrides'], ['changes', 'nfChanges'], ['versions', 'nfVersions']].forEach(([key, name]) => {
+    const row = el('div', 'settings-row');
+    const sw = el('label', 'fork-switch'); const cb = el('input'); cb.type = 'checkbox'; cb.setAttribute('role', 'switch'); cb.setAttribute('aria-label', tr(name)); cb.checked = !!nf[key];
+    sw.append(cb, el('span', 'fork-switch-track')); row.append(el('span', '', tr(name)), sw); group.append(row);
+    cb.addEventListener('change', async () => {
+      const want = cb.checked;
+      try { await savePrefs({ [key]: want }); } catch (_) { cb.checked = !want; toast(tr('errNet')); }
+    });
+  });
+  pick(tr('nfQuiet'), tr('nfQuietNote'), QUIET.map(q => [JSON.stringify(q), quietName(q)]), JSON.stringify(nf.quiet || null), 'quiet');
+  accessRows.append(group);
+}
 function paintAccess() {
   buildAccess();
   if (!accessBox) return;
@@ -219,9 +264,10 @@ function paintAccess() {
     sw.append(cb, el('span', 'fork-switch-track')); row.append(label, sw); accessRows.append(row);
     cb.addEventListener('change', async () => {
       const want = cb.checked;
-      try { const res = await api('POST', '/api/me/subscription', { on: want }); if (!res.ok) throw new Error(); hw.setMe({ subscribed: want }); }
+      try { const res = await api('POST', '/api/me/subscription', { on: want }); if (!res.ok) throw new Error(); hw.setMe({ subscribed: want }); if (me.notify) paintAccess(); }
       catch (_) { cb.checked = !want; toast(tr('errNet')); }
     });
+    if (me.notify) paintNotify(me);
   }
   if (me.role === 'reader') {
     if (me.requested) accessRows.append(el('p', 'settings-note', tr('requestWait')));
