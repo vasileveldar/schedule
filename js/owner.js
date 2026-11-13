@@ -20,6 +20,9 @@ async function api(method, path, body) {
 
 let stats = null, users = [], filter = '', loadedAt = 0, loading = false, summaryText = '', pingMs = null, release = null;
 let broadcastText = '';
+let feedback = [];   // обращения («Сообщить об ошибке или идее»)
+let replyOpen = 0;   // id обращения, под которым открыто поле ответа
+let replyText = '';
 
 function isOwner() { return hw.role() === 'owner'; }
 function applyRole() { card.hidden = !isOwner(); if (isOwner() && !root.dataset.built) { root.dataset.built = '1'; render(); } }
@@ -31,9 +34,9 @@ async function refresh(force) {
   loading = true; render();
   try {
     const t0 = performance.now();
-    const [s, u, rel] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release')]);
+    const [s, u, rel, fb] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release'), api('GET', '/api/admin/feedback')]);
     pingMs = Math.round(performance.now() - t0);
-    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null;
+    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null; feedback = fb.ok && Array.isArray(fb.body) ? fb.body : [];
     if (!s.ok || !u.ok) toast(s.status === 403 || u.status === 403 ? 'Нет доступа: откройте приложение из Telegram.' : 'Не удалось загрузить данные.');
     loadedAt = Date.now();
   } catch (_) { toast('Нет связи с облаком.'); }
@@ -83,7 +86,7 @@ function render() {
     const grid = el('div', 'ow-grid');
     grid.append(
       tile(u.approved, 'в боте'), tile(u.pending, 'ждут решения', u.pending ? 'warn' : ''), tile(u.subscribed, 'подписаны'), tile(u.editors, 'редакторов'),
-      tile(stats.homework, 'д/з активных'), tile(stats.photos.count + ' · ' + stats.photos.mb + ' МБ', 'фото'), tile(stats.overrides, 'изменений пар'), tile(release ? 'v' + release.version : '—', 'версия APK')
+      tile(stats.homework, 'д/з активных'), tile(stats.photos.count + ' · ' + stats.photos.mb + ' МБ', 'фото'), tile(stats.overrides, 'изменений пар'), tile(release ? 'v' + release.version : '—', 'версия APK'), tile(feedback.filter(x => x.status === 'new').length, 'обращений новых', feedback.some(x => x.status === 'new') ? 'warn' : '')
     );
     root.append(grid);
     if (stats.errors && stats.errors.length) {
@@ -106,6 +109,8 @@ function render() {
     }
     root.append(box);
   }
+
+  renderFeedback();
 
   // пользователи
   const box = section('Пользователи');
@@ -146,6 +151,44 @@ function render() {
   tools.append(el('p', 'hw-hint', 'Сборка APK, публикация сайта, выкатка облака и резервная копия ключа подписи — только в центре управления на компьютере.'));
   root.append(tools);
   window.scrollTo(0, keepScroll);
+}
+
+// ---------- обращения ----------
+const KIND_ICON = { bug: '🐞 Ошибка', idea: '💡 Идея', question: '❓ Вопрос' };
+async function setFeedback(f, patch, okText) {
+  const res = await api('POST', '/api/admin/feedback/' + f.id, patch);
+  if (!res.ok) { toast(res.status === 409 ? 'Автор не вошёл через Telegram: ответить нельзя.' : 'Не получилось: ' + (res.body.error || res.status)); return false; }
+  if (patch.reply !== undefined && res.body.delivered === false) { toast('Telegram не принял ответ (возможно, человек остановил бота).'); return false; }
+  toast(okText); replyOpen = 0; replyText = ''; refresh(true); return true;
+}
+function renderFeedback() {
+  if (!feedback.length) return;
+  const box = section('Обращения');
+  const fresh = feedback.filter(f => f.status === 'new'), done = feedback.filter(f => f.status === 'done').slice(0, 5);
+  for (const f of [...fresh, ...done]) {
+    const item = el('div', 'ow-row ow-fb' + (f.status === 'done' ? ' ow-fb-done' : ''));
+    const head = el('div', 'ow-user');
+    head.append(el('strong', '', (KIND_ICON[f.kind] || f.kind) + ' · ' + (f.author || 'аноним')));
+    head.append(el('span', 'ow-meta', new Date(f.created * 1000).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + (f.status === 'done' ? ' · решено' : '')));
+    item.append(head, el('p', 'ow-fb-text', f.text));
+    const info = ['version', 'platform', 'lang', 'screen', 'device'].filter(k => f.info && f.info[k]).map(k => f.info[k]).join(' · ');
+    if (info) item.append(el('p', 'ow-meta', info));
+    if (f.reply) item.append(el('p', 'ow-fb-reply', '↩ Ответ: ' + f.reply));
+    const acts = el('div', 'ow-acts wrap');
+    if (f.identified) acts.append(button(replyOpen === f.id ? 'Скрыть' : 'Ответить', 'choice', () => { replyOpen = replyOpen === f.id ? 0 : f.id; replyText = ''; render(); }));
+    acts.append(button(f.status === 'done' ? 'Вернуть в новые' : 'Решено', 'choice', () => setFeedback(f, { status: f.status === 'done' ? 'new' : 'done' }, 'Готово')));
+    item.append(acts);
+    if (replyOpen === f.id) {
+      const ta = el('textarea', 'hw-input'); ta.rows = 3; ta.maxLength = 1000; ta.placeholder = 'Ответ придёт автору от бота'; ta.value = replyText;
+      ta.addEventListener('input', () => { replyText = ta.value; });
+      item.append(ta, button('Отправить ответ', 'choice ow-yes', async () => {
+        const text = ta.value.trim(); if (!text) { toast('Напишите ответ.'); return; }
+        await setFeedback(f, { reply: text }, 'Ответ отправлен');
+      }));
+    }
+    box.append(item);
+  }
+  root.append(box);
 }
 
 function userLabel(u) {

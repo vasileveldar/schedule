@@ -102,5 +102,6 @@ async function setNick(value) {
 
 window.addEventListener('online', flush);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) flush(); });
+window.scheduleCloud = { request, enabled, inTelegram, deviceId, native: nativeNet };
 window.scheduleScores = { enabled, inTelegram, nick, needNick, setNick, submit, top, flush, hasPending: () => Object.keys(pending()).length > 0 };
 })();
