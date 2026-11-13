@@ -419,7 +419,7 @@ function renderList() {
 }
 
 // ---------- запуск ----------
-// карточка д/з всегда идёт сразу после карточки «Следующая пара» (её добавляет android.js чуть позже)
+// карточка д/з всегда идёт сразу после карточки «Следующая пара» (её добавляет home.js чуть позже)
 {
   const home = document.getElementById('home-screen');
   if (home) new MutationObserver(() => {
