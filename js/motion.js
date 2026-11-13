@@ -1,8 +1,7 @@
 (() => {
 const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-// режим анимаций выбирается в настройках (data-anim на <html>: full | soft | off); пока не выбран — по системной настройке
+// режим анимаций (data-anim на <html>: full | off) ставит fx.js: полные, а при «уменьшить движение» в системе — выключены
 const reduced = () => { const m = document.documentElement.dataset.anim; return m ? m === 'off' : preference.matches; };
-const soft = () => document.documentElement.dataset.anim === 'soft';
 const animations = new Set();
 const reveals = new Set();
 const elementAnimations = new WeakMap();
@@ -66,7 +65,7 @@ function enter(screen, dir) {
   if (!visible(screen) || reduced()) return;
   const tab = document.body.dataset.tabswitch === '1';
   if (tab) delete document.body.dataset.tabswitch;
-  const dx = soft() || tab ? 0 : dir === 'back' ? -26 : 26;
+  const dx = tab ? 0 : dir === 'back' ? -26 : 26;
   play(document.getElementById('page-title'), [
     { opacity: .35, transform: 'translateY(4px)' },
     { opacity: 1, transform: 'translateY(0)' }
@@ -76,7 +75,7 @@ function enter(screen, dir) {
     { opacity: 1, transform: 'translateX(0) translateY(0)' }
   ], { duration: dx ? 320 : 220 });
   if (screen.id === 'home-screen') {
-    if (!soft()) screen.querySelectorAll('.menu-card').forEach((card, index) => play(card, [
+    screen.querySelectorAll('.menu-card').forEach((card, index) => play(card, [
       { opacity: 0, transform: 'translateY(14px) scale(.985)' },
       { opacity: 1, transform: 'translateY(0) scale(1)' }
     ], { duration: 340, delay: 40 + Math.min(index * 45, 220) }));

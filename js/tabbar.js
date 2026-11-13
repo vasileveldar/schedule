@@ -1,18 +1,16 @@
 (() => {
 'use strict';
-/* Нижняя панель вкладок: по умолчанию выключена (привычное меню остаётся как есть). Включается в «Настройки → Навигация». Только на телефоне и планшете. */
+/* Нижняя панель вкладок: всегда включена (переключателя нет). Только на телефоне и планшете (ширину решает CSS). */
 const i18n = window.scheduleI18n;
 const app = window.scheduleApp;
 if (!i18n || !app) return;
-const KEY = 'schedule-nav';
 const L = {
-  ru: { home: 'Главная', schedule: 'Пары', calendar: 'Календарь', game: 'Игры', settings: 'Настройки', homework: 'Д/з', title: 'Навигация', label: 'Как переходить между разделами', menu: 'Меню (как раньше)', bar: 'Нижняя панель', aria: 'Разделы' },
-  en: { home: 'Home', schedule: 'Timetable', calendar: 'Calendar', game: 'Games', settings: 'Settings', homework: 'Homework', title: 'Navigation', label: 'Moving between sections', menu: 'Menu (as before)', bar: 'Bottom bar', aria: 'Sections' },
-  de: { home: 'Start', schedule: 'Plan', calendar: 'Kalender', game: 'Spiele', settings: 'Mehr', homework: 'Hausaufg.', title: 'Navigation', label: 'Wechsel zwischen Bereichen', menu: 'Menü (wie bisher)', bar: 'Untere Leiste', aria: 'Bereiche' },
+  ru: { home: 'Главная', schedule: 'Пары', calendar: 'Календарь', game: 'Игры', settings: 'Настройки', homework: 'Д/з', aria: 'Разделы' },
+  en: { home: 'Home', schedule: 'Timetable', calendar: 'Calendar', game: 'Games', settings: 'Settings', homework: 'Homework', aria: 'Sections' },
+  de: { home: 'Start', schedule: 'Plan', calendar: 'Kalender', game: 'Spiele', settings: 'Mehr', homework: 'Hausaufg.', aria: 'Bereiche' },
 };
 const tr = k => (L[i18n.getLanguage()] || L.ru)[k];
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
-const store = { get() { try { return localStorage.getItem(KEY); } catch (_) { return null; } }, set(v) { try { localStorage.setItem(KEY, v); } catch (_) {} } };
 
 const ICONS = {
   home: '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z"/>',
@@ -51,41 +49,15 @@ function paint() {
   const screen = app.getScreen();
   for (const [name, b] of buttons) { b.querySelector('span').textContent = tr(name); b.setAttribute('aria-current', name === screen ? 'page' : 'false'); }
 }
-const on = () => store.get() === 'bar';
 function apply() {
-  document.body.dataset.nav = on() ? 'bar' : 'menu';
-  bar.hidden = !on();
-  if (on()) build();
+  document.body.dataset.nav = 'bar';
+  bar.hidden = false;
+  build();
 }
 document.body.append(bar);
 new MutationObserver(paint).observe(document.body, { attributes: true, attributeFilter: ['data-screen'] });
-window.addEventListener('language:change', () => { paint(); paintSetting(); });
-window.addEventListener('role:change', () => { if (on()) build(); });
+window.addEventListener('language:change', paint);
+window.addEventListener('role:change', build);
 
-// переключатель в настройках
-let select = null, title = null, label = null;
-function paintSetting() {
-  if (!select) return;
-  title.textContent = tr('title'); label.textContent = tr('label');
-  select.options[0].textContent = tr('menu'); select.options[1].textContent = tr('bar');
-  select.value = on() ? 'bar' : 'menu';
-}
-{
-  const settings = document.getElementById('settings-screen');
-  if (settings) {
-    const box = el('section', 'settings-group');
-    title = el('h2'); box.append(title);
-    const row = el('div', 'settings-row'); label = el('label', '', ''); label.htmlFor = 'nav-select';
-    select = el('select', 'language-select'); select.id = 'nav-select';
-    select.append(el('option', '', ''), el('option', '', '')); select.options[0].value = 'menu'; select.options[1].value = 'bar';
-    row.append(label, select); box.append(row);
-    select.addEventListener('change', () => { store.set(select.value); apply(); });
-    const notify = document.getElementById('notify-settings');
-    const access = document.getElementById('access-settings');
-    const anchor = access || notify;
-    if (anchor) anchor.before(box); else settings.append(box);
-    paintSetting();
-  }
-}
 apply();
 })();

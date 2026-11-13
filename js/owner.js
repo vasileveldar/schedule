@@ -20,10 +20,6 @@ async function api(method, path, body) {
 
 let stats = null, users = [], filter = '', loadedAt = 0, loading = false, summaryText = '', pingMs = null, release = null;
 let broadcastText = '';
-let analytics = null; // анонимная статистика
-let feedback = [];   // обращения («Сообщить об ошибке или идее»)
-let replyOpen = 0;   // id обращения, под которым открыто поле ответа
-let replyText = '';
 
 function isOwner() { return hw.role() === 'owner'; }
 function applyRole() { card.hidden = !isOwner(); if (isOwner() && !root.dataset.built) { root.dataset.built = '1'; render(); } }
@@ -35,9 +31,9 @@ async function refresh(force) {
   loading = true; render();
   try {
     const t0 = performance.now();
-    const [s, u, rel, fb, an] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release'), api('GET', '/api/admin/feedback'), api('GET', '/api/admin/analytics?days=14')]);
+    const [s, u, rel] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/users'), api('GET', '/api/release')]);
     pingMs = Math.round(performance.now() - t0);
-    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null; feedback = fb.ok && Array.isArray(fb.body) ? fb.body : []; analytics = an.ok && an.body && an.body.now ? an.body : null;
+    stats = s.ok ? s.body : null; users = u.ok && Array.isArray(u.body) ? u.body : []; release = rel.ok ? rel.body : null;
     if (!s.ok || !u.ok) toast(s.status === 403 || u.status === 403 ? 'Нет доступа: откройте приложение из Telegram.' : 'Не удалось загрузить данные.');
     loadedAt = Date.now();
   } catch (_) { toast('Нет связи с облаком.'); }
@@ -87,7 +83,7 @@ function render() {
     const grid = el('div', 'ow-grid');
     grid.append(
       tile(u.approved, 'в боте'), tile(u.pending, 'ждут решения', u.pending ? 'warn' : ''), tile(u.subscribed, 'подписаны'), tile(u.editors, 'редакторов'),
-      tile(stats.homework, 'д/з активных'), tile(stats.photos.count + ' · ' + stats.photos.mb + ' МБ', 'фото'), tile(stats.overrides, 'изменений пар'), tile(release ? 'v' + release.version : '—', 'версия APK'), tile(feedback.filter(x => x.status === 'new').length, 'обращений новых', feedback.some(x => x.status === 'new') ? 'warn' : '')
+      tile(stats.homework, 'д/з активных'), tile(stats.photos.count + ' · ' + stats.photos.mb + ' МБ', 'фото'), tile(stats.overrides, 'изменений пар'), tile(release ? 'v' + release.version : '—', 'версия APK')
     );
     root.append(grid);
     if (stats.errors && stats.errors.length) {
@@ -111,8 +107,6 @@ function render() {
     root.append(box);
   }
 
-  renderFeedback();
-  renderAnalytics();
 
   // пользователи
   const box = section('Пользователи');
@@ -155,84 +149,6 @@ function render() {
   window.scrollTo(0, keepScroll);
 }
 
-// ---------- анонимная статистика ----------
-const SCREEN_NAME = { home: 'Главная', schedule: 'Расписание', calendar: 'Календарь', game: 'Игры', settings: 'Настройки', homework: 'Д/з', owner: 'Управление' };
-const FEATURE_NAME = { share: 'Поделиться парой', done: 'Отметка «Сделано»', search: 'Поиск', history: 'История д/з', report: 'Сообщить об ошибке' };
-const LANG_NAME = { ru: 'Русский', en: 'English', de: 'Deutsch' };
-function bars(title, list, names) {
-  const wrap = el('div', 'ow-bars');
-  wrap.append(el('h3', 'ow-subhead', title));
-  const max = Math.max(1, ...list.map(x => x.n));
-  if (!list.length) wrap.append(el('p', 'ow-meta', 'нет данных'));
-  for (const x of list.slice(0, 8)) {
-    const row = el('div', 'ow-bar');
-    const fill = el('i'); fill.style.width = Math.max(3, Math.round(x.n / max * 100)) + '%';
-    const track = el('span', 'ow-bar-track'); track.append(fill);
-    row.append(el('span', 'ow-bar-name', (names && names[x.key]) || x.key), track, el('b', '', String(x.n)));
-    wrap.append(row);
-  }
-  return wrap;
-}
-function renderAnalytics() {
-  if (!analytics) return;
-  const a = analytics;
-  const box = section('Статистика (анонимная, ' + a.days + ' дн.)');
-  if (!a.hasData) { box.append(el('p', 'hw-hint', 'Данных пока нет: статистика начинает копиться, когда люди откроют обновлённое приложение.')); root.append(box); return; }
-  const grid = el('div', 'ow-grid');
-  grid.append(tile(a.now.day, 'активных сегодня'), tile(a.now.week, 'за неделю' + (a.now.prevWeek ? ' (прошлая: ' + a.now.prevWeek + ')' : '')), tile(a.now.month, 'за месяц'), tile(a.returning, 'вернулись за ' + a.days + ' дн.'));
-  box.append(grid);
-  // активные по дням
-  const maxDay = Math.max(1, ...a.series.map(x => x.n));
-  const spark = el('div', 'ow-spark'); spark.setAttribute('role', 'img'); spark.setAttribute('aria-label', 'Активные устройства по дням');
-  for (const d of a.series) { const c = el('div', 'ow-spark-col'); const i = el('i'); i.style.height = Math.max(4, Math.round(d.n / maxDay * 100)) + '%'; c.title = d.day + ': ' + d.n; c.append(i, el('span', '', d.day.slice(8))); spark.append(c); }
-  box.append(el('h3', 'ow-subhead', 'Активные по дням'), spark);
-  box.append(bars('Платформы', a.platform), bars('Версии приложения', a.version.map(x => ({ ...x, key: 'v' + x.key }))), bars('Экраны', a.screen, SCREEN_NAME), bars('Функции', a.feature, FEATURE_NAME), bars('Языки', a.lang, LANG_NAME), bars('Темы', a.theme));
-  // часы активности
-  const maxHour = Math.max(1, ...a.hour.map(x => x.n));
-  const hours = el('div', 'ow-spark ow-hours');
-  for (const h of a.hour) { const c = el('div', 'ow-spark-col'); const i = el('i'); i.style.height = Math.max(h.n ? 4 : 1, Math.round(h.n / maxHour * 100)) + '%'; c.title = h.key + ':00 — ' + h.n; c.append(i, el('span', '', Number(h.key) % 3 === 0 ? h.key : '')); hours.append(c); }
-  box.append(el('h3', 'ow-subhead', 'Часы активности (Алматы)'), hours);
-  box.append(el('p', 'hw-hint', 'Считаются только устройства без имён и ID. Каждый человек — максимум раз в день. Выключатель у пользователей: «Настройки → Ещё».'));
-  root.append(box);
-}
-
-// ---------- обращения ----------
-const KIND_ICON = { bug: '🐞 Ошибка', idea: '💡 Идея', question: '❓ Вопрос' };
-async function setFeedback(f, patch, okText) {
-  const res = await api('POST', '/api/admin/feedback/' + f.id, patch);
-  if (!res.ok) { toast(res.status === 409 ? 'Автор не вошёл через Telegram: ответить нельзя.' : 'Не получилось: ' + (res.body.error || res.status)); return false; }
-  if (patch.reply !== undefined && res.body.delivered === false) { toast('Telegram не принял ответ (возможно, человек остановил бота).'); return false; }
-  toast(okText); replyOpen = 0; replyText = ''; refresh(true); return true;
-}
-function renderFeedback() {
-  if (!feedback.length) return;
-  const box = section('Обращения');
-  const fresh = feedback.filter(f => f.status === 'new'), done = feedback.filter(f => f.status === 'done').slice(0, 5);
-  for (const f of [...fresh, ...done]) {
-    const item = el('div', 'ow-row ow-fb' + (f.status === 'done' ? ' ow-fb-done' : ''));
-    const head = el('div', 'ow-user');
-    head.append(el('strong', '', (KIND_ICON[f.kind] || f.kind) + ' · ' + (f.author || 'аноним')));
-    head.append(el('span', 'ow-meta', new Date(f.created * 1000).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + (f.status === 'done' ? ' · решено' : '')));
-    item.append(head, el('p', 'ow-fb-text', f.text));
-    const info = ['version', 'platform', 'lang', 'screen', 'device'].filter(k => f.info && f.info[k]).map(k => f.info[k]).join(' · ');
-    if (info) item.append(el('p', 'ow-meta', info));
-    if (f.reply) item.append(el('p', 'ow-fb-reply', '↩ Ответ: ' + f.reply));
-    const acts = el('div', 'ow-acts wrap');
-    if (f.identified) acts.append(button(replyOpen === f.id ? 'Скрыть' : 'Ответить', 'choice', () => { replyOpen = replyOpen === f.id ? 0 : f.id; replyText = ''; render(); }));
-    acts.append(button(f.status === 'done' ? 'Вернуть в новые' : 'Решено', 'choice', () => setFeedback(f, { status: f.status === 'done' ? 'new' : 'done' }, 'Готово')));
-    item.append(acts);
-    if (replyOpen === f.id) {
-      const ta = el('textarea', 'hw-input'); ta.rows = 3; ta.maxLength = 1000; ta.placeholder = 'Ответ придёт автору от бота'; ta.value = replyText;
-      ta.addEventListener('input', () => { replyText = ta.value; });
-      item.append(ta, button('Отправить ответ', 'choice ow-yes', async () => {
-        const text = ta.value.trim(); if (!text) { toast('Напишите ответ.'); return; }
-        await setFeedback(f, { reply: text }, 'Ответ отправлен');
-      }));
-    }
-    box.append(item);
-  }
-  root.append(box);
-}
 
 function userLabel(u) {
   const wrap = el('div', 'ow-user');

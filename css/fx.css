@@ -1,5 +1,5 @@
 /* Визуал и анимации: единые токены, иконки, отклик, мини-панель, кольцо пары, эффекты расписания и игр. Загружается последним.
-   Режимы: html[data-anim="full|soft|off"] — см. fx.js. */
+   Режимы: html[data-anim="full|off"] — см. fx.js (выключены только при системной настройке «уменьшить движение»). */
 
 /* ---------- 1. единая система: скругления и тени ---------- */
 :root {
@@ -126,9 +126,7 @@ html[data-anim="full"] .arc-list li { animation: fx-up .42s var(--fx-ease) both;
 html.fx-theme *, html.fx-theme *::before, html.fx-theme *::after { transition: background-color .45s ease, color .45s ease, border-color .45s ease, box-shadow .45s ease, fill .45s ease, stroke .45s ease !important; }
 
 /* ---------- 11. режимы анимаций ---------- */
-html[data-anim="soft"] :is(.fx-glow, .fork-day-part.now, .fork-next-card.is-soon .fork-ring, .fork-current-lesson, .fx-ripple) { animation: none; }
-html[data-anim="soft"] .fork-day-bar.draw .fork-day-part { animation: none; }
-html[data-anim="soft"] .fx-reveal, html[data-anim="off"] .fx-reveal { opacity: 1; transform: none; }
+html[data-anim="off"] .fx-reveal { opacity: 1; transform: none; }
 html[data-anim="off"] *, html[data-anim="off"] *::before, html[data-anim="off"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 html[data-anim="off"] .fx-mini { transition: none; }
 @media (prefers-reduced-motion: reduce) { html:not([data-anim="full"]) .fx-glow, html:not([data-anim="full"]) .fx-ripple { display: none; } }

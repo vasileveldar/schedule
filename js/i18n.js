@@ -2,7 +2,7 @@
 'use strict';
 const catalogue=JSON.parse(document.getElementById('translation-data').textContent);
 const valid=['ru','en','de'];
-const palettes=['en','de','sunset','forest','ocean','graphite','sakura','amoled','custom'];
+const palettes=['en','de','sunset','forest','ocean','graphite','sakura','amoled'];
 let language=valid.includes(document.documentElement.dataset.language)?document.documentElement.dataset.language:'ru';
 let palette=palettes.includes(document.documentElement.dataset.palette)?document.documentElement.dataset.palette:'en';
 let hasSavedPalette=palettes.includes(document.documentElement.dataset.palette);

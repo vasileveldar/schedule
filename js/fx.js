@@ -1,13 +1,10 @@
 (() => {
 'use strict';
-/* Эффекты и анимации интерфейса. Режим «Полные / Мягкие / Выключены» хранится в localStorage (schedule-anim); при «уменьшить движение» в системе по умолчанию выключены.
-   Полные: всё; мягкие: только короткие появления; выключены: никакого движения. */
+/* Эффекты и анимации интерфейса: всегда полные. Единственное исключение — системная настройка «уменьшить движение»: тогда движения нет. */
 const root = document.documentElement;
 const i18n = window.scheduleI18n;
-const store = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* нет хранилища */ } } };
 const mq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-let mode = store.get('schedule-anim');
-if (!['full', 'soft', 'off'].includes(mode)) mode = mq.matches ? 'off' : 'full';
+let mode = mq.matches ? 'off' : 'full';
 root.dataset.anim = mode;
 const full = () => mode === 'full';
 const on = () => mode !== 'off';
@@ -16,15 +13,15 @@ window.scheduleFx = { mode: () => mode, full, on };
 const L = {
   ru: {
     morning: 'Доброе утро', day: 'Добрый день', evening: 'Добрый вечер', night: 'Доброй ночи', gap: 'окно {n} мин', gapH: 'окно {h} ч {m} мин',
-    anim: 'Анимации', full: 'Полные', soft: 'Мягкие', off: 'Выключены', back: 'Назад',
+    back: 'Назад',
   },
   en: {
     morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night', gap: 'break {n} min', gapH: 'break {h} h {m} min',
-    anim: 'Animations', full: 'Full', soft: 'Gentle', off: 'Off', back: 'Back',
+    back: 'Back',
   },
   de: {
     morning: 'Guten Morgen', day: 'Guten Tag', evening: 'Guten Abend', night: 'Gute Nacht', gap: 'Pause {n} Min.', gapH: 'Pause {h} Std. {m} Min.',
-    anim: 'Animationen', full: 'Volle', soft: 'Sanfte', off: 'Aus', back: 'Zurück',
+    back: 'Zurück',
   },
 };
 const lang = () => (i18n && i18n.getLanguage()) || 'ru';
@@ -116,7 +113,7 @@ function paintGreeting() {
   eyebrow.textContent = tr(t) + ' · ' + date;
 }
 paintGreeting();
-window.addEventListener('language:change', () => { paintGreeting(); paintAnimSetting(); });
+window.addEventListener('language:change', () => { paintGreeting(); });
 setInterval(paintGreeting, 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) paintGreeting(); });
 
@@ -260,7 +257,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) reve
 }
 
 // ---------- 8. смена темы: плавное перекрашивание ----------
-for (const id of ['mode-select', 'palette-select', 'custom-accent']) {
+for (const id of ['mode-select', 'palette-select']) {
   const n = document.getElementById(id);
   if (!n) continue;
   n.addEventListener('change', () => {
@@ -270,28 +267,8 @@ for (const id of ['mode-select', 'palette-select', 'custom-accent']) {
   }, true);
 }
 
-// ---------- 9. настройка «Анимации» ----------
-let animSelect = null, animLabel = null;
-function paintAnimSetting() {
-  if (!animSelect) return;
-  animLabel.textContent = tr('anim');
-  const names = ['full', 'soft', 'off'];
-  [...animSelect.options].forEach((o, i) => { o.textContent = tr(names[i]); });
-  animSelect.value = mode;
-}
-{
-  const group = document.querySelector('#settings-screen .settings-group');
-  if (group) {
-    const row = el('div', 'settings-row');
-    animLabel = el('label'); animLabel.htmlFor = 'anim-select';
-    animSelect = el('select', 'language-select'); animSelect.id = 'anim-select';
-    for (const v of ['full', 'soft', 'off']) { const o = el('option'); o.value = v; animSelect.append(o); }
-    row.append(animLabel, animSelect); group.append(row);
-    animSelect.addEventListener('change', () => { mode = animSelect.value; store.set('schedule-anim', mode); root.dataset.anim = mode; onScroll(); if (mode === 'full') revealOnScroll(); });
-    paintAnimSetting();
-  }
-}
-if (mq.addEventListener) mq.addEventListener('change', () => { if (!store.get('schedule-anim')) { mode = mq.matches ? 'off' : 'full'; root.dataset.anim = mode; paintAnimSetting(); } });
+// следим за системной настройкой «уменьшить движение»
+if (mq.addEventListener) mq.addEventListener('change', () => { mode = mq.matches ? 'off' : 'full'; root.dataset.anim = mode; });
 onScroll();
 decorateSchedule();
 })();

@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-const CACHE = 'schedule-in251-230798ef035a';
+const CACHE = 'schedule-in251-2fe6ece2958c';
 const SHELL = [
   "./",
   "./apple-touch-icon.png",
@@ -38,7 +38,6 @@ const SHELL = [
   "./js/owner.js",
   "./js/reports.js",
   "./js/scores.js",
-  "./js/stats.js",
   "./js/tabbar.js",
   "./js/telegram.js",
   "./js/theme.js",
