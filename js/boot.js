@@ -2,8 +2,8 @@
 (function () {
   'use strict';
   var APP_SCRIPTS = ['js/app.js']; /*SCRIPTS*/
-  // грузятся при первом использовании: игры — при открытии вкладки «Игры», «Управление» — когда вошёл владелец
-  var LAZY = {"game": ["js/lazy-game.js"], "owner": ["js/lazy-owner.js"]}; /*LAZY*/
+  // грузятся при первом использовании: игры — при открытии вкладки «Игры»
+  var LAZY = {"game": ["js/lazy-game.js"]}; /*LAZY*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
   var CACHE_KEY = 'schedule-json-cache';
   var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
@@ -37,9 +37,6 @@
       return lazyLoads[name];
     }
   };
-  window.addEventListener('role:change', function (e) {
-    if (e.detail && e.detail.role === 'owner') window.scheduleLazy.load('owner').catch(function () {});
-  });
   function getText(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw new Error(url + ' ' + r.status);

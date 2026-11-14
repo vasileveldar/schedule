@@ -466,9 +466,9 @@ window.interfaceMotion = { enter };
 ;
 /* js/navigation.js */
 (() => {
-const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen'),homework:document.getElementById('homework-screen'),owner:document.getElementById('owner-screen')};
-const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings',homework:'nav.homework',owner:'nav.owner'};
-const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings',homework:'nav.openedHomework',owner:'nav.openedOwner'};
+const screens = {home:document.getElementById('home-screen'),schedule:document.getElementById('schedule-screen'),calendar:document.getElementById('calendar-screen'),game:document.getElementById('game-screen'),settings:document.getElementById('settings-screen'),homework:document.getElementById('homework-screen')};
+const titles={home:'app.name',schedule:'app.title',calendar:'nav.calendar',game:'nav.game',settings:'nav.settings',homework:'nav.homework'};
+const announcements={home:'nav.home',schedule:'nav.openedSchedule',calendar:'nav.openedCalendar',game:'nav.openedGame',settings:'nav.openedSettings',homework:'nav.openedHomework'};
 const heading=document.getElementById('page-title');
 const back=document.getElementById('back-menu');
 const eyebrow=document.getElementById('header-eyebrow');
@@ -718,7 +718,7 @@ function checkButton(i) {
 }
 
 let items = [];
-let role = null; // 'owner' | 'editor' | 'reader' | null
+let role = null; // 'owner' | 'headman' | 'editor' | 'reader' | null
 let me = null;   // ответ /api/me (роль, подписка, запрошены ли права)
 let initData = '';
 let editingId = null;
@@ -758,7 +758,7 @@ async function loadMe() {
     const r = await fetch(cloud + '/api/me', { headers: headers() });
     if (r.ok) { me = await r.json(); role = me.role; }
   } catch (_) {}
-  const can = role === 'owner' || role === 'editor';
+  const can = role === 'owner' || role === 'headman' || role === 'editor';
   const card = document.getElementById('hw-menu-card');
   if (card) card.hidden = !can;
   if (can) { await loadItems(); buildForm(); }
@@ -892,7 +892,7 @@ function field(labelKey, control) {
 }
 let refs = {};
 function buildForm() {
-  if (!root || !(role === 'owner' || role === 'editor')) return;
+  if (!root || !(role === 'owner' || role === 'headman' || role === 'editor')) return;
   formBuilt = true;
   root.replaceChildren();
   const card = el('section', 'hw-card');
@@ -1137,28 +1137,28 @@ const L = {
   ru: {
     addHw: '＋ Д/з', change: '⋯ Изменить', sheetHw: 'Новое д/з', sheetOv: 'Изменить пару', date: 'Дата', due: 'Срок сдачи', text: 'Текст задания', textPh: 'Что задано', links: 'Ссылки (по одной в строке)', photos: 'Фото',
     save: 'Сохранить', close: 'Закрыть', kind: 'Что изменилось', kCancel: 'Пара отменена', kRoom: 'Другая аудитория', kTeacher: 'Другой преподаватель', kMove: 'Перенос', kNote: 'Заметка',
-    pRoom: 'Номер аудитории', pTeacher: 'Кто ведёт', pMove: 'Куда и когда перенесли', pNote: 'Текст заметки', notify: 'Сообщить подписавшимся в Telegram', existing: 'Уже стоит', remove: 'Снять',
-    saved: 'Сохранено', savedN: 'Сохранено, сообщение получили: {n}', removed: 'Снято', hwSaved: 'Задание добавлено',
+    pRoom: 'Номер аудитории', pTeacher: 'Кто ведёт', pMove: 'Куда и когда перенесли', pNote: 'Текст заметки', existing: 'Уже стоит', remove: 'Снять',
+    saved: 'Сохранено', removed: 'Снято', hwSaved: 'Задание добавлено',
     errNet: 'Нет связи с облаком. Попробуйте ещё раз.', errForbidden: 'Нет прав на это действие.', errRate: 'Слишком много действий, попробуйте позже.', errRange: 'Дата должна быть в ближайшие 14 дней.', errInvalid: 'Проверьте поля.', photoFail: 'Задание сохранено, но фото загрузить не удалось.',
-    accessTitle: 'Мой доступ', role: 'Роль', rReader: 'Читатель', rEditor: 'Редактор', rOwner: 'Владелец', rNone: 'Доступ не одобрен', sub: 'Оповещения в Telegram', subNote: 'Отмены и замены пар, напоминания о парах, обновления и объявления.',
+    accessTitle: 'Мой доступ', role: 'Роль', rReader: 'Читатель', rEditor: 'Редактор', rHeadman: 'Староста', rOwner: 'Владелец', rNone: 'Доступ не одобрен', sub: 'Напоминания о парах в Telegram', subNote: 'Бот напишет за 5 минут до начала пары. Включаете только вы.',
     request: 'Запросить права редактора', requested: 'Запрос отправлен владельцу. Ответ придёт в Telegram.', requestWait: 'Запрос уже отправлен, повторить можно через сутки.', editorNote: 'Вы можете отмечать изменения прямо в карточках пар и добавлять д/з.',
   },
   en: {
     addHw: '＋ Homework', change: '⋯ Change', sheetHw: 'New homework', sheetOv: 'Change this class', date: 'Date', due: 'Due date', text: 'Task', textPh: 'What was assigned', links: 'Links (one per line)', photos: 'Photos',
     save: 'Save', close: 'Close', kind: 'What changed', kCancel: 'Class cancelled', kRoom: 'Different room', kTeacher: 'Different teacher', kMove: 'Moved', kNote: 'Note',
-    pRoom: 'Room number', pTeacher: 'Who teaches', pMove: 'Where and when', pNote: 'Note text', notify: 'Notify subscribers in Telegram', existing: 'Already set', remove: 'Remove',
-    saved: 'Saved', savedN: 'Saved, messages delivered: {n}', removed: 'Removed', hwSaved: 'Homework added',
+    pRoom: 'Room number', pTeacher: 'Who teaches', pMove: 'Where and when', pNote: 'Note text', existing: 'Already set', remove: 'Remove',
+    saved: 'Saved', removed: 'Removed', hwSaved: 'Homework added',
     errNet: 'No connection to the cloud. Try again.', errForbidden: 'You are not allowed to do this.', errRate: 'Too many actions, try again later.', errRange: 'The date must be within the next 14 days.', errInvalid: 'Check the fields.', photoFail: 'Homework saved, but the photo could not be uploaded.',
-    accessTitle: 'My access', role: 'Role', rReader: 'Reader', rEditor: 'Editor', rOwner: 'Owner', rNone: 'Access not approved', sub: 'Telegram notifications', subNote: 'Cancelled or changed classes, class reminders, updates and announcements.',
+    accessTitle: 'My access', role: 'Role', rReader: 'Reader', rEditor: 'Editor', rHeadman: 'Class representative', rOwner: 'Owner', rNone: 'Access not approved', sub: 'Class reminders in Telegram', subNote: 'The bot messages you 5 minutes before a class. Only you turn it on.',
     request: 'Request editor access', requested: 'Request sent to the owner. The answer will come in Telegram.', requestWait: 'Already requested; you can ask again in a day.', editorNote: 'You can mark changes right on class cards and add homework.',
   },
   de: {
     addHw: '＋ Hausaufg.', change: '⋯ Ändern', sheetHw: 'Neue Hausaufgabe', sheetOv: 'Stunde ändern', date: 'Datum', due: 'Abgabe', text: 'Aufgabe', textPh: 'Was aufgegeben wurde', links: 'Links (einer pro Zeile)', photos: 'Fotos',
     save: 'Speichern', close: 'Schließen', kind: 'Was ist neu', kCancel: 'Stunde entfällt', kRoom: 'Anderer Raum', kTeacher: 'Andere Lehrkraft', kMove: 'Verschoben', kNote: 'Notiz',
-    pRoom: 'Raumnummer', pTeacher: 'Wer unterrichtet', pMove: 'Wohin und wann', pNote: 'Text der Notiz', notify: 'Abonnenten in Telegram benachrichtigen', existing: 'Bereits gesetzt', remove: 'Entfernen',
-    saved: 'Gespeichert', savedN: 'Gespeichert, Nachrichten zugestellt: {n}', removed: 'Entfernt', hwSaved: 'Hausaufgabe hinzugefügt',
+    pRoom: 'Raumnummer', pTeacher: 'Wer unterrichtet', pMove: 'Wohin und wann', pNote: 'Text der Notiz', existing: 'Bereits gesetzt', remove: 'Entfernen',
+    saved: 'Gespeichert', removed: 'Entfernt', hwSaved: 'Hausaufgabe hinzugefügt',
     errNet: 'Keine Verbindung zur Cloud. Bitte erneut versuchen.', errForbidden: 'Dazu fehlt die Berechtigung.', errRate: 'Zu viele Aktionen, später erneut versuchen.', errRange: 'Das Datum muss in den nächsten 14 Tagen liegen.', errInvalid: 'Felder prüfen.', photoFail: 'Aufgabe gespeichert, Foto konnte nicht hochgeladen werden.',
-    accessTitle: 'Mein Zugang', role: 'Rolle', rReader: 'Leser', rEditor: 'Editor', rOwner: 'Inhaber', rNone: 'Zugang nicht freigegeben', sub: 'Telegram-Benachrichtigungen', subNote: 'Entfallene oder geänderte Stunden, Erinnerungen, Updates und Ankündigungen.',
+    accessTitle: 'Mein Zugang', role: 'Rolle', rReader: 'Leser', rEditor: 'Editor', rHeadman: 'Gruppensprecher', rOwner: 'Inhaber', rNone: 'Zugang nicht freigegeben', sub: 'Stundenerinnerungen in Telegram', subNote: 'Der Bot schreibt 5 Minuten vor Beginn der Stunde. Nur du schaltest es ein.',
     request: 'Editor-Rechte anfragen', requested: 'Anfrage an den Inhaber gesendet. Die Antwort kommt in Telegram.', requestWait: 'Bereits angefragt, in einem Tag erneut möglich.', editorNote: 'Du kannst Änderungen direkt an den Stundenkarten markieren und Hausaufgaben hinzufügen.',
   },
 };
@@ -1166,7 +1166,7 @@ const lang = () => i18n.getLanguage() || 'ru';
 const tr = (k, p) => String((L[lang()] || L.ru)[k] ?? L.ru[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => (p && p[n] !== undefined ? p[n] : ''));
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
 const toast = (text, opts) => (window.scheduleToast ? window.scheduleToast(text, opts) : null);
-const canEdit = () => hw.role() === 'owner' || hw.role() === 'editor';
+const canEdit = () => ['owner', 'headman', 'editor'].includes(hw.role());
 const pad = n => String(n).padStart(2, '0');
 const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 
@@ -1257,10 +1257,9 @@ function openOverrideSheet(card) {
     if (kind !== 'cancel') { value.hidden = false; value.placeholder = tr(KIND_PH[kind]); valueWrap.firstChild.textContent = tr(KIND_LABEL[kind]); }
   };
   for (const k of KINDS) { const b = el('button', 'ed-chip', tr(KIND_LABEL[k])); b.type = 'button'; b.dataset.kind = k; b.addEventListener('click', () => { kind = k; paint(); if (k !== 'cancel') value.focus(); }); chips.append(b); }
-  const notifyBox = input('checkbox', 'ed-check'); const notifyRow = el('label', 'ed-checkrow'); notifyRow.append(notifyBox, el('span', '', tr('notify')));
   const status = el('p', 'ed-status'); status.setAttribute('aria-live', 'polite');
   const save = el('button', 'ed-primary', tr('save')); save.type = 'button';
-  sheet.body.append(field(tr('date'), date), chips, valueWrap, notifyRow, status, save);
+  sheet.body.append(field(tr('date'), date), chips, valueWrap, status, save);
 
   const existing = el('div', 'ed-existing');
   const paintExisting = () => {
@@ -1275,7 +1274,7 @@ function openOverrideSheet(card) {
       rm.addEventListener('click', async () => {
         rm.disabled = true;
         try {
-          const res = await api('DELETE', '/api/overrides/' + o.id + (notifyBox.checked ? '?notify=1' : ''));
+          const res = await api('DELETE', '/api/overrides/' + o.id + '');
           if (!res.ok) { status.textContent = errorText(res); status.classList.add('bad'); rm.disabled = false; return; }
           await O.reload(); paintExisting(); status.textContent = tr('removed'); status.classList.remove('bad');
         } catch (_) { status.textContent = tr('errNet'); status.classList.add('bad'); rm.disabled = false; }
@@ -1288,11 +1287,11 @@ function openOverrideSheet(card) {
   save.addEventListener('click', async () => {
     status.textContent = ''; status.classList.remove('bad'); save.disabled = true;
     try {
-      const res = await api('POST', '/api/overrides', { lesson: key, date: date.value, kind, value: kind === 'cancel' ? '' : value.value, notify: notifyBox.checked });
+      const res = await api('POST', '/api/overrides', { lesson: key, date: date.value, kind, value: kind === 'cancel' ? '' : value.value });
       if (!res.ok) { status.textContent = errorText(res); status.classList.add('bad'); return; }
       await O.reload();
       sheet.close();
-      toast(res.body.notified ? tr('savedN', { n: res.body.notified }) : tr('saved'));
+      toast(tr('saved'));
     } catch (_) { status.textContent = tr('errNet'); status.classList.add('bad'); }
     finally { save.disabled = false; }
   });
@@ -1327,7 +1326,7 @@ function buildAccess() {
   const notify = document.getElementById('notify-settings');
   if (notify) notify.before(accessBox); else settings.append(accessBox);
 }
-function roleLabel(role) { return role === 'owner' ? tr('rOwner') : role === 'editor' ? tr('rEditor') : role === 'reader' ? tr('rReader') : tr('rNone'); }
+function roleLabel(role) { return role === 'owner' ? tr('rOwner') : role === 'headman' ? tr('rHeadman') : role === 'editor' ? tr('rEditor') : role === 'reader' ? tr('rReader') : tr('rNone'); }
 function paintAccess() {
   buildAccess();
   if (!accessBox) return;
@@ -1338,7 +1337,7 @@ function paintAccess() {
   if (!me) return;
   const roleRow = el('div', 'settings-row'); roleRow.append(el('span', '', tr('role')), el('strong', '', roleLabel(me.role)));
   accessRows.append(roleRow);
-  if (me.role === 'owner' || me.role === 'editor') accessRows.append(el('p', 'settings-note', tr('editorNote')));
+  if (['owner', 'headman', 'editor'].includes(me.role)) accessRows.append(el('p', 'settings-note', tr('editorNote')));
   if (me.status === 'approved' || me.role) {
     const row = el('div', 'settings-row');
     const label = el('div', 'ed-subcopy'); label.append(el('span', '', tr('sub')), el('small', '', tr('subNote')));
@@ -1544,7 +1543,7 @@ function go(name) {
   const trigger = name === 'settings' ? document.getElementById('open-settings') : name === 'homework' ? document.getElementById('hw-menu-card') : document.querySelector('#home-screen [data-open-screen="' + name + '"]');
   if (trigger) trigger.click(); else app.navigate(name);
 }
-function canHomework() { const r = window.scheduleHomework && window.scheduleHomework.role(); return r === 'owner' || r === 'editor'; }
+function canHomework() { const r = window.scheduleHomework && window.scheduleHomework.role(); return r === 'owner' || r === 'headman' || r === 'editor'; }
 function build() {
   bar.replaceChildren();
   const names = ['home', 'schedule', 'calendar', 'game'];
@@ -2202,9 +2201,8 @@ const ICON = {
   moodle: '<path d="M2.8 9.4 12 5l9.2 4.4L12 13.8z"/><path d="M6.6 11.6v4.2c0 1.3 2.5 2.7 5.4 2.7s5.4-1.4 5.4-2.7v-4.2"/><path d="M21.2 9.4v5"/>',
   platonus: '<rect x="3.4" y="5.5" width="17.2" height="13" rx="2.6"/><circle cx="9" cy="11" r="2.1"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h3.6M14.5 13.2h3.6"/>',
   homework: '<path d="M5 19.2l.9-4 9.6-9.6 3.1 3.1-9.6 9.6z"/><path d="M14 7.2l3 3"/>',
-  owner: '<path d="M12 3.2 4.6 6v5.6c0 4.4 3 7.6 7.4 9.2 4.4-1.6 7.4-4.8 7.4-9.2V6z"/><path d="M9 12l2.2 2.2L15.4 10"/>',
 };
-const ICON_FOR = { '.schedule-card': 'schedule', '.academic-calendar-card': 'calendar', '.game-card': 'game', '.moodle-card': 'moodle', '.platonus-card': 'platonus', '.homework-menu-card': 'homework', '.owner-menu-card': 'owner' };
+const ICON_FOR = { '.schedule-card': 'schedule', '.academic-calendar-card': 'calendar', '.game-card': 'game', '.moodle-card': 'moodle', '.platonus-card': 'platonus', '.homework-menu-card': 'homework' };
 for (const [sel, name] of Object.entries(ICON_FOR)) {
   const sym = document.querySelector('#home-screen ' + sel + ' .menu-symbol');
   if (!sym) continue;
@@ -2417,8 +2415,7 @@ function gameFx(readyAt) {
     window.addEventListener('resize', place); window.addEventListener('language:change', () => setTimeout(place, 50));
     place();
   }
-  document.querySelectorAll('.g-wrap .jg-stat strong').forEach(n => { if (!n._fxCounter) { n._fxCounter = true; watchCounter(n); } });
-  for (const n of document.querySelectorAll('#jg-best, .g-wrap .jg-best strong')) { if (!n._fxBest) { n._fxBest = true; watchBest(n, readyAt); } }
+  for (const n of document.querySelectorAll('#jg-best')) { if (!n._fxBest) { n._fxBest = true; watchBest(n, readyAt); } }
 }
 gameFx(Date.now() + 3000);
 window.addEventListener('lazy:loaded', e => { if (e.detail === 'game') gameFx(Date.now() + 3000); });
