@@ -7,7 +7,7 @@
   <title>Управление · ИН-25-1</title>
   <script>
     /* тема как в основном приложении (то же хранилище браузера) */
-    try {var d=document.documentElement,ls=localStorage;var P=['en','de','sunset','forest','ocean','graphite','sakura','amoled'],F={sunset:'dark',forest:'light',ocean:'light',graphite:'dark',sakura:'light'};var p=ls.getItem('schedule-palette');if(P.indexOf(p)>=0)d.dataset.palette=p;var m=ls.getItem('schedule-mode')||(ls.getItem('schedule-theme')==='dark'?'dark':'light');var sys=false;try{sys=!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}catch(e){}var dark=F[p]?F[p]==='dark':(m==='dark'||(m==='system'&&sys));if(dark)d.dataset.theme='dark';} catch(e){}
+    try {var d=document.documentElement,ls=localStorage;var P=['en','sunset','forest','ocean','graphite','sakura','amoled'],F={sunset:'dark',forest:'light',ocean:'light',graphite:'dark',sakura:'light'};var p=ls.getItem('schedule-palette');if(P.indexOf(p)>=0)d.dataset.palette=p;var m=ls.getItem('schedule-mode')||(ls.getItem('schedule-theme')==='dark'?'dark':'light');var sys=false;try{sys=!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}catch(e){}var dark=F[p]?F[p]==='dark':(m==='dark'||(m==='system'&&sys));if(dark)d.dataset.theme='dark';} catch(e){}
   </script>
   <link rel="stylesheet" href="../css/app.css">
   <style>

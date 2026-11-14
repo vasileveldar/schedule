@@ -629,7 +629,6 @@ if (!screen) return;
 const L = {
   ru: { jump: 'Прыжки', board: 'Таблица рекордов', today: 'Сегодня', best: 'Рекорд', empty: 'Пока никого. Станьте первым!', you: 'вы', rank: 'Ваше место', nick: 'Ваш ник', save: 'Сохранить', nickHint: 'Ник нужен, чтобы попасть в таблицу рекордов (2–16 символов).', tg: 'Имя берётся из Telegram: {name}', saved: 'Ник сохранён', taken: 'Такой ник уже занят', bad: 'Допустимы 2–16 символов: буквы, цифры, пробел, _ . -', net: 'Нет связи, попробуйте позже', offline: 'Таблица рекордов недоступна', pend: 'Счёт отправится, когда появится связь', sound: 'Звук', haptic: 'Вибрация', ctlTouch: 'Кнопки и свайп', ctlTilt: 'Гироскоп', ctl: 'Управление', games: 'Выбор игры', change: 'Изменить', loading: 'Загрузка…' },
   en: { jump: 'Jump', board: 'Leaderboard', today: 'Today', best: 'Best', empty: 'Nobody yet. Be the first!', you: 'you', rank: 'Your rank', nick: 'Your nickname', save: 'Save', nickHint: 'A nickname puts you on the leaderboard (2–16 characters).', tg: 'Name comes from Telegram: {name}', saved: 'Nickname saved', taken: 'This nickname is taken', bad: '2–16 characters: letters, digits, space, _ . -', net: 'No connection, try later', offline: 'Leaderboard unavailable', pend: 'Score will be sent when online', sound: 'Sound', haptic: 'Vibration', ctlTouch: 'Buttons & swipe', ctlTilt: 'Gyroscope', ctl: 'Controls', games: 'Choose a game', change: 'Change', loading: 'Loading…' },
-  de: { jump: 'Sprung', board: 'Bestenliste', today: 'Heute', best: 'Rekord', empty: 'Noch niemand. Sei der Erste!', you: 'du', rank: 'Dein Platz', nick: 'Dein Spitzname', save: 'Speichern', nickHint: 'Mit einem Spitznamen erscheinst du in der Bestenliste (2–16 Zeichen).', tg: 'Name stammt von Telegram: {name}', saved: 'Spitzname gespeichert', taken: 'Dieser Spitzname ist vergeben', bad: '2–16 Zeichen: Buchstaben, Ziffern, Leerzeichen, _ . -', net: 'Keine Verbindung, später versuchen', offline: 'Bestenliste nicht verfügbar', pend: 'Punkte werden bei Verbindung gesendet', sound: 'Ton', haptic: 'Vibration', ctlTouch: 'Tasten & Wischen', ctlTilt: 'Gyroskop', ctl: 'Steuerung', games: 'Spiel wählen', change: 'Ändern', loading: 'Laden…' },
 };
 const lang = () => (window.scheduleI18n && window.scheduleI18n.getLanguage && window.scheduleI18n.getLanguage()) || 'ru';
 const tr = (k, p) => { const s = (L[lang()] || L.ru)[k] || L.ru[k] || k; return p ? s.replace(/\{(\w+)\}/g, (_, n) => p[n]) : s; };
@@ -784,7 +783,7 @@ async function refreshBoard() {
   if (!s || !s.enabled) return;
   try { const data = await s.top(current.id); if (lastGameShown === current.id) { latest = data; status = data ? '' : 'offline'; paintBoard(); } } catch (_) { latest = null; status = 'offline'; paintBoard(); }
 }
-const fmt = n => new Intl.NumberFormat(lang() === 'de' ? 'de-DE' : lang() === 'en' ? 'en-GB' : 'ru-RU').format(n);
+const fmt = n => new Intl.NumberFormat(lang() === 'en' ? 'en-GB' : 'ru-RU').format(n);
 function paintBoard() {
   const s = scores();
   board.textContent = '';

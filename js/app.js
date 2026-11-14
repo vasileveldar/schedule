@@ -2,15 +2,15 @@
 (() => {
 'use strict';
 const catalogue=JSON.parse(document.getElementById('translation-data').textContent);
-const valid=['ru','en','de'];
-const palettes=['en','de','sunset','forest','ocean','graphite','sakura','amoled'];
+const valid=['ru','en'];
+const palettes=['en','sunset','forest','ocean','graphite','sakura','amoled'];
 let language=valid.includes(document.documentElement.dataset.language)?document.documentElement.dataset.language:'ru';
 let palette=palettes.includes(document.documentElement.dataset.palette)?document.documentElement.dataset.palette:'en';
 let hasSavedPalette=palettes.includes(document.documentElement.dataset.palette);
 try {const stored=localStorage.getItem('schedule-language');if(valid.includes(stored))language=stored;else if(window.AppPreferences){const native=window.AppPreferences.getLocale();if(valid.includes(native))language=native;}} catch (_) {}
 try {const stored=localStorage.getItem('schedule-palette');if(palettes.includes(stored)){palette=stored;hasSavedPalette=true;}} catch (_) {}
 if(!hasSavedPalette){
-  palette=language==='de'?'de':'en';
+  palette='en';
   try {localStorage.setItem('schedule-palette',palette);} catch (_) {}
 }
 function t(key,params={}) {
@@ -198,13 +198,13 @@ function render(){
     const section=el('section','day-section'),heading=el('div','day-heading');section.dataset.day=day;
     const number=el('span','day-number',String(days.indexOf(day)+1).padStart(2,'0'));number.setAttribute('aria-hidden','true');heading.append(number,el('h2','',i18n.day(day)));section.append(heading);
     if(state.mode!=='rk1'&&day===currentScheduleDay()){
-      const now=new Date(),locale={ru:'ru-RU',en:'en-GB',de:'de-DE'}[i18n.getLanguage()];
+      const now=new Date(),locale={ru:'ru-RU',en:'en-GB'}[i18n.getLanguage()];
       const date=el('time','current-day-date',new Intl.DateTimeFormat(locale,{day:'numeric',month:'long'}).format(now));
       date.dateTime=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
       heading.append(date);
     }
     if(state.mode==='rk1'){
-      const date=el('time','assessment-day-date',new Intl.DateTimeFormat({ru:'ru-RU',en:'en-GB',de:'de-DE'}[i18n.getLanguage()],{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(assessment.dates[day]+'T12:00:00Z')));
+      const date=el('time','assessment-day-date',new Intl.DateTimeFormat({ru:'ru-RU',en:'en-GB'}[i18n.getLanguage()],{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(assessment.dates[day]+'T12:00:00Z')));
       date.dateTime=assessment.dates[day];heading.append(date);
     }
     const stack=el('div','day-stack');if(!events.length)stack.append(el('p','empty',t('schedule.empty')));else for(const event of events)stack.append(drawEvent(event));
@@ -581,14 +581,13 @@ const keyOf = (day, start, subject, group) => [day, clock(start), subject, group
 const pad = n => String(n).padStart(2, '0');
 const isoDate = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 const todayIso = () => isoDate(new Date());
-const locale = () => ({ ru: 'ru-RU', en: 'en-GB', de: 'de-DE' }[i18n.getLanguage()] || 'ru-RU');
+const locale = () => ({ ru: 'ru-RU', en: 'en-GB' }[i18n.getLanguage()] || 'ru-RU');
 
 // личные отметки «сделано»: только на этом устройстве, по id задания
 const DONE_KEY = 'schedule-hw-done';
 const DL = {
-  ru: { done: 'Сделано', undone: 'Вернуть', markDone: 'Отметить как сделанное', markUndone: 'Снять отметку «сделано»', photo: 'Фото к заданию', photos: 'Фото', addPhoto: '📷 Добавить фото', photoLimit: 'Не больше 3 фото', photoFail: 'Не удалось загрузить фото', removePhoto: 'Убрать фото', close: 'Закрыть' },
-  en: { done: 'Done', undone: 'Undo', markDone: 'Mark as done', markUndone: 'Remove the done mark', photo: 'Homework photo', photos: 'Photos', addPhoto: '📷 Add photo', photoLimit: 'No more than 3 photos', photoFail: 'Could not upload the photo', removePhoto: 'Remove photo', close: 'Close' },
-  de: { done: 'Erledigt', undone: 'Zurück', markDone: 'Als erledigt markieren', markUndone: 'Erledigt-Markierung entfernen', photo: 'Foto zur Aufgabe', photos: 'Fotos', addPhoto: '📷 Foto hinzufügen', photoLimit: 'Höchstens 3 Fotos', photoFail: 'Foto konnte nicht hochgeladen werden', removePhoto: 'Foto entfernen', close: 'Schließen' },
+  ru: { done: 'Сделано', undone: 'Вернуть', markDone: 'Отметить как сделанное', markUndone: 'Снять отметку «сделано»' },
+  en: { done: 'Done', undone: 'Undo', markDone: 'Mark as done', markUndone: 'Remove the done mark' },
 };
 const dt = k => (DL[i18n.getLanguage()] || DL.ru)[k];
 const doneSet = (() => { try { const a = JSON.parse(localStorage.getItem(DONE_KEY) || '[]'); return new Set(Array.isArray(a) ? a : []); } catch (_) { return new Set(); } })();
@@ -614,101 +613,6 @@ function pruneDone() { // отметки к удалённым заданиям 
   for (const id of [...doneSet]) if (!ids.has(id)) { doneSet.delete(id); changed = true; }
   if (changed) saveDone();
 }
-// ---------- фото к заданиям ----------
-const MAX_PHOTOS = 3;
-const photoUrl = id => (nativeApp ? './data/photos/' + id + '.jpg' : cloud + '/api/photos/' + id);
-function openPhoto(src) {
-  const box = el('div', 'hw-lightbox'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.tabIndex = -1;
-  const img = el('img'); img.src = src; img.alt = dt('photo');
-  const x = el('button', 'hw-lightbox-x', '×'); x.type = 'button'; x.setAttribute('aria-label', dt('close'));
-  const close = () => { box.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = e => { if (e.key === 'Escape') close(); };
-  box.addEventListener('click', close); x.addEventListener('click', close); document.addEventListener('keydown', onKey);
-  box.append(img, x); document.body.append(box); box.focus();
-}
-function photoStrip(item) {
-  if (!item.photos || !item.photos.length) return null;
-  const row = el('div', 'hw-photos');
-  for (const id of item.photos) {
-    const b = el('button', 'hw-photo-btn'); b.type = 'button'; b.setAttribute('aria-label', dt('photo'));
-    const img = el('img', 'hw-photo'); img.src = photoUrl(id); img.loading = 'lazy'; img.alt = '';
-    b.append(img); b.addEventListener('click', e => { e.stopPropagation(); openPhoto(photoUrl(id)); });
-    row.append(b);
-  }
-  return row;
-}
-function loadImage(file) {
-  return new Promise((ok, fail) => {
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); ok(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); fail(new Error('image')); };
-    img.src = url;
-  });
-}
-// сжатие на устройстве: до 1280 px по длинной стороне, JPEG; в облако уходит base64 не больше ~400 тыс. знаков
-async function compressImage(file) {
-  const img = await loadImage(file);
-  let scale = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(img.naturalWidth * scale)); c.height = Math.max(1, Math.round(img.naturalHeight * scale));
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    const data = c.toDataURL('image/jpeg', attempt ? 0.6 : 0.72);
-    const b64 = data.slice(data.indexOf(',') + 1);
-    if (b64.length <= 400000) return { b64, preview: data };
-    scale *= 0.75;
-  }
-  throw new Error('too big');
-}
-async function uploadPhoto(hwId, b64) {
-  const r = await fetch(cloud + '/api/homework/' + hwId + '/photos', { method: 'POST', headers: { ...headers(), 'content-type': 'application/json' }, body: JSON.stringify({ data: b64 }) });
-  if (!r.ok) throw new Error(String(r.status));
-  return (await r.json()).id;
-}
-async function deletePhoto(id) {
-  const r = await fetch(cloud + '/api/photos/' + id, { method: 'DELETE', headers: headers() });
-  if (!r.ok) throw new Error(String(r.status));
-}
-
-// выбор фото в форме: уже загруженные (можно убрать) и новые (сжимаются сразу, уходят после сохранения задания)
-function photoPicker(existing = []) {
-  const state = { keep: [...existing], gone: [], added: [] };
-  const node = el('div', 'hw-picker');
-  const strip = el('div', 'hw-photos edit');
-  const add = el('button', 'choice hw-addphoto', dt('addPhoto')); add.type = 'button';
-  const input = el('input'); input.type = 'file'; input.accept = 'image/*'; input.multiple = true; input.hidden = true;
-  const msg = el('p', 'hw-hint');
-  const count = () => state.keep.length + state.added.length;
-  const thumb = (src, remove) => {
-    const w = el('div', 'hw-thumb'), img = el('img', 'hw-photo'), x = el('button', 'hw-thumb-x', '×');
-    img.src = src; img.alt = ''; x.type = 'button'; x.setAttribute('aria-label', dt('removePhoto')); x.addEventListener('click', remove);
-    w.append(img, x); return w;
-  };
-  function paint() {
-    strip.replaceChildren();
-    for (const id of state.keep) strip.append(thumb(photoUrl(id), () => { state.keep = state.keep.filter(x => x !== id); state.gone.push(id); paint(); }));
-    state.added.forEach((p, idx) => strip.append(thumb(p.preview, () => { state.added.splice(idx, 1); paint(); })));
-    add.hidden = count() >= MAX_PHOTOS;
-  }
-  add.addEventListener('click', () => input.click());
-  input.addEventListener('change', async () => {
-    msg.textContent = '';
-    for (const f of [...input.files]) {
-      if (count() >= MAX_PHOTOS) { msg.textContent = dt('photoLimit'); break; }
-      try { state.added.push(await compressImage(f)); } catch (_) { msg.textContent = dt('photoFail'); }
-    }
-    input.value = ''; paint();
-  });
-  node.append(strip, add, input, msg); paint();
-  return { node, state };
-}
-async function applyPhotos(hwId, picker) {
-  let ok = true;
-  for (const id of picker.state.gone) { try { await deletePhoto(id); } catch (_) { ok = false; } }
-  for (const p of picker.state.added) { try { await uploadPhoto(hwId, p.b64); } catch (_) { ok = false; } }
-  return ok;
-}
-
 function checkButton(i) {
   const on = isDone(i);
   const b = el('button', 'hw-check' + (on ? ' on' : '') + (justToggled === i.id ? ' pop' : ''), on ? '✓ ' + dt('done') : '○ ' + dt('done'));
@@ -782,7 +686,6 @@ function block(item) {
   if (past) head.append(el('span', 'hw-late', t('hw.past')));
   else head.append(checkButton(item));
   box.append(head, el('p', 'hw-text', item.text));
-  const strip = photoStrip(item); if (strip) box.append(strip);
   if (item.author) box.append(authorLine(item));
   for (const raw of item.links || []) {
     const href = safeLink(raw);
@@ -824,7 +727,6 @@ function renderHome() {
     const top = el('div', 'hw-home-top');
     top.append(el('strong', '', (names.get(i.lesson) || i.lesson.split('|')[2] || '') + ' — ' + when), checkButton(i));
     row.append(top, el('p', 'hw-text', i.text));
-    const strip = photoStrip(i); if (strip) row.append(strip);
     if (i.author) row.append(authorLine(i));
     for (const raw of i.links || []) {
       const href = safeLink(raw);
@@ -910,12 +812,10 @@ function buildForm() {
   const cancel = el('button', 'choice hw-cancel', t('hw.cancel')); cancel.type = 'button'; cancel.hidden = !editingId;
   const actions = el('div', 'hw-actions'); actions.append(save, cancel);
   const editing = editingId ? items.find(i => i.id === editingId) : null;
-  const picker = photoPicker(editing ? editing.photos || [] : []);
-  const photoField = el('div', 'hw-field'); photoField.append(el('span', 'hw-label', dt('photos')), picker.node);
-  card.append(title, field('hw.lesson', lesson), field('hw.due', due), field('hw.text', text), field('hw.links', links), photoField, actions, status, el('p', 'hw-hint', t('hw.hint')));
+  card.append(title, field('hw.lesson', lesson), field('hw.due', due), field('hw.text', text), field('hw.links', links), actions, status, el('p', 'hw-hint', t('hw.hint')));
   const list = el('section', 'hw-card hw-list');
   root.append(card, list);
-  refs = { lesson, due, text, links, status, save, cancel, title, list, picker };
+  refs = { lesson, due, text, links, status, save, cancel, title, list };
 
   save.addEventListener('click', submit);
   cancel.addEventListener('click', () => { editingId = null; buildForm(); });
@@ -942,9 +842,8 @@ async function submit() {
     const r = await fetch(url, { method: editingId ? 'PUT' : 'POST', headers: { ...headers(), 'content-type': 'application/json' }, body: JSON.stringify(payload) });
     const body = await r.json().catch(() => ({}));
     if (!r.ok) { setStatus(describeError(r.status, body), true); return; }
-    const photosOk = await applyPhotos(body.id || editingId, refs.picker);
     editingId = null;
-    await loadItems(); buildForm(); setStatus(photosOk ? t('hw.saved') : dt('photoFail'), !photosOk);
+    await loadItems(); buildForm(); setStatus(t('hw.saved'));
   } catch (_) { setStatus(t('hw.errNet'), true); }
   finally { if (refs.save) refs.save.disabled = false; }
 }
@@ -957,7 +856,6 @@ function renderList() {
   for (const i of mine) {
     const row = el('article', 'hw-row');
     row.append(el('strong', '', names.get(i.lesson) || i.lesson.split('|').slice(0, 3).join(' · ')), el('span', 'hw-due', t('hw.dueTo', { date: dateText(i.due) })), el('p', 'hw-text', i.text));
-    const strip = photoStrip(i); if (strip) row.append(strip);
     if (i.author) row.append(authorLine(i));
     const edit = el('button', 'choice', t('hw.edit')); edit.type = 'button';
     const del = el('button', 'choice', t('hw.delete')); del.type = 'button';
@@ -989,17 +887,16 @@ function renderList() {
     if (box && next && next.nextElementSibling !== box) next.after(box);
   }).observe(home, { childList: true });
 }
-// быстрое добавление из карточки пары: создаёт задание и загружает фото; возвращает { ok, status, body, photosOk }
-async function createHomework(payload, picker) {
+// быстрое добавление из карточки пары: создаёт задание; возвращает { ok, status, body }
+async function createHomework(payload) {
   const r = await fetch(cloud + '/api/homework', { method: 'POST', headers: { ...headers(), 'content-type': 'application/json' }, body: JSON.stringify(payload) });
   const body = await r.json().catch(() => ({}));
   if (!r.ok) return { ok: false, status: r.status, body, message: describeError(r.status, body) };
-  const photosOk = picker ? await applyPhotos(body.id, picker) : true;
   await loadItems();
-  return { ok: true, status: r.status, body, photosOk };
+  return { ok: true, status: r.status, body };
 }
 window.scheduleHomework = {
-  reload: loadItems, role: () => role, me: () => me, cloud, headers, nativeApp, photoPicker, createHomework,
+  reload: loadItems, role: () => role, me: () => me, cloud, headers, nativeApp, createHomework,
   nextDateFor: day => (data ? nextDateFor(day) : todayIso()), keyOf, todayIso, isoDate, items: () => items,
   setMe(patch) { me = { ...(me || {}), ...patch }; },
 };
@@ -1028,11 +925,10 @@ const CACHE_KEY = 'schedule-overrides-cache';
 const L = {
   ru: { cancel: 'Пара отменена', room: 'Аудитория: {v}', was: 'было {v}', teacher: 'Преподаватель: {v}', move: 'Перенос: {v}' },
   en: { cancel: 'Class cancelled', room: 'Room: {v}', was: 'was {v}', teacher: 'Teacher: {v}', move: 'Moved: {v}' },
-  de: { cancel: 'Stunde entfällt', room: 'Raum: {v}', was: 'vorher {v}', teacher: 'Lehrkraft: {v}', move: 'Verschoben: {v}' },
 };
 const lang = () => (i18n && i18n.getLanguage()) || 'ru';
 const tr = (k, v) => String((L[lang()] || L.ru)[k]).replace('{v}', v === undefined ? '' : v);
-const locale = () => ({ ru: 'ru-RU', en: 'en-GB', de: 'de-DE' }[lang()] || 'ru-RU');
+const locale = () => ({ ru: 'ru-RU', en: 'en-GB' }[lang()] || 'ru-RU');
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
 const pad = n => String(n).padStart(2, '0');
 const isoOf = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -1135,31 +1031,22 @@ const ov = () => window.scheduleOverrides;
 
 const L = {
   ru: {
-    addHw: '＋ Д/з', change: '⋯ Изменить', sheetHw: 'Новое д/з', sheetOv: 'Изменить пару', date: 'Дата', due: 'Срок сдачи', text: 'Текст задания', textPh: 'Что задано', links: 'Ссылки (по одной в строке)', photos: 'Фото',
+    addHw: '＋ Д/з', change: '⋯ Изменить', sheetHw: 'Новое д/з', sheetOv: 'Изменить пару', date: 'Дата', due: 'Срок сдачи', text: 'Текст задания', textPh: 'Что задано', links: 'Ссылки (по одной в строке)',
     save: 'Сохранить', close: 'Закрыть', kind: 'Что изменилось', kCancel: 'Пара отменена', kRoom: 'Другая аудитория', kTeacher: 'Другой преподаватель', kMove: 'Перенос', kNote: 'Заметка',
     pRoom: 'Номер аудитории', pTeacher: 'Кто ведёт', pMove: 'Куда и когда перенесли', pNote: 'Текст заметки', existing: 'Уже стоит', remove: 'Снять',
     saved: 'Сохранено', removed: 'Снято', hwSaved: 'Задание добавлено',
-    errNet: 'Нет связи с облаком. Попробуйте ещё раз.', errForbidden: 'Нет прав на это действие.', errRate: 'Слишком много действий, попробуйте позже.', errRange: 'Дата должна быть в ближайшие 14 дней.', errInvalid: 'Проверьте поля.', photoFail: 'Задание сохранено, но фото загрузить не удалось.',
+    errNet: 'Нет связи с облаком. Попробуйте ещё раз.', errForbidden: 'Нет прав на это действие.', errRate: 'Слишком много действий, попробуйте позже.', errRange: 'Дата должна быть в ближайшие 14 дней.', errInvalid: 'Проверьте поля.',
     accessTitle: 'Мой доступ', role: 'Роль', rReader: 'Читатель', rEditor: 'Редактор', rHeadman: 'Староста', rOwner: 'Владелец', rNone: 'Доступ не одобрен', sub: 'Напоминания о парах в Telegram', subNote: 'Бот напишет за 5 минут до начала пары. Включаете только вы.',
     request: 'Запросить права редактора', requested: 'Запрос отправлен владельцу. Ответ придёт в Telegram.', requestWait: 'Запрос уже отправлен, повторить можно через сутки.', editorNote: 'Вы можете отмечать изменения прямо в карточках пар и добавлять д/з.',
   },
   en: {
-    addHw: '＋ Homework', change: '⋯ Change', sheetHw: 'New homework', sheetOv: 'Change this class', date: 'Date', due: 'Due date', text: 'Task', textPh: 'What was assigned', links: 'Links (one per line)', photos: 'Photos',
+    addHw: '＋ Homework', change: '⋯ Change', sheetHw: 'New homework', sheetOv: 'Change this class', date: 'Date', due: 'Due date', text: 'Task', textPh: 'What was assigned', links: 'Links (one per line)',
     save: 'Save', close: 'Close', kind: 'What changed', kCancel: 'Class cancelled', kRoom: 'Different room', kTeacher: 'Different teacher', kMove: 'Moved', kNote: 'Note',
     pRoom: 'Room number', pTeacher: 'Who teaches', pMove: 'Where and when', pNote: 'Note text', existing: 'Already set', remove: 'Remove',
     saved: 'Saved', removed: 'Removed', hwSaved: 'Homework added',
-    errNet: 'No connection to the cloud. Try again.', errForbidden: 'You are not allowed to do this.', errRate: 'Too many actions, try again later.', errRange: 'The date must be within the next 14 days.', errInvalid: 'Check the fields.', photoFail: 'Homework saved, but the photo could not be uploaded.',
+    errNet: 'No connection to the cloud. Try again.', errForbidden: 'You are not allowed to do this.', errRate: 'Too many actions, try again later.', errRange: 'The date must be within the next 14 days.', errInvalid: 'Check the fields.',
     accessTitle: 'My access', role: 'Role', rReader: 'Reader', rEditor: 'Editor', rHeadman: 'Class representative', rOwner: 'Owner', rNone: 'Access not approved', sub: 'Class reminders in Telegram', subNote: 'The bot messages you 5 minutes before a class. Only you turn it on.',
     request: 'Request editor access', requested: 'Request sent to the owner. The answer will come in Telegram.', requestWait: 'Already requested; you can ask again in a day.', editorNote: 'You can mark changes right on class cards and add homework.',
-  },
-  de: {
-    addHw: '＋ Hausaufg.', change: '⋯ Ändern', sheetHw: 'Neue Hausaufgabe', sheetOv: 'Stunde ändern', date: 'Datum', due: 'Abgabe', text: 'Aufgabe', textPh: 'Was aufgegeben wurde', links: 'Links (einer pro Zeile)', photos: 'Fotos',
-    save: 'Speichern', close: 'Schließen', kind: 'Was ist neu', kCancel: 'Stunde entfällt', kRoom: 'Anderer Raum', kTeacher: 'Andere Lehrkraft', kMove: 'Verschoben', kNote: 'Notiz',
-    pRoom: 'Raumnummer', pTeacher: 'Wer unterrichtet', pMove: 'Wohin und wann', pNote: 'Text der Notiz', existing: 'Bereits gesetzt', remove: 'Entfernen',
-    saved: 'Gespeichert', removed: 'Entfernt', hwSaved: 'Hausaufgabe hinzugefügt',
-    errNet: 'Keine Verbindung zur Cloud. Bitte erneut versuchen.', errForbidden: 'Dazu fehlt die Berechtigung.', errRate: 'Zu viele Aktionen, später erneut versuchen.', errRange: 'Das Datum muss in den nächsten 14 Tagen liegen.', errInvalid: 'Felder prüfen.', photoFail: 'Aufgabe gespeichert, Foto konnte nicht hochgeladen werden.',
-    accessTitle: 'Mein Zugang', role: 'Rolle', rReader: 'Leser', rEditor: 'Editor', rHeadman: 'Gruppensprecher', rOwner: 'Inhaber', rNone: 'Zugang nicht freigegeben', sub: 'Stundenerinnerungen in Telegram', subNote: 'Der Bot schreibt 5 Minuten vor Beginn der Stunde. Nur du schaltest es ein.',
-    request: 'Editor-Rechte anfragen', requested: 'Anfrage an den Inhaber gesendet. Die Antwort kommt in Telegram.', requestWait: 'Bereits angefragt, in einem Tag erneut möglich.', editorNote: 'Du kannst Änderungen direkt an den Stundenkarten markieren und Hausaufgaben hinzufügen.',
   },
 };
 const lang = () => i18n.getLanguage() || 'ru';
@@ -1212,11 +1099,9 @@ function openHomeworkSheet(card) {
   due.value = hw.nextDateFor(card.dataset.day);
   const text = el('textarea', 'ed-input'); text.rows = 4; text.maxLength = 1000; text.placeholder = tr('textPh');
   const links = el('textarea', 'ed-input'); links.rows = 2; links.placeholder = 'https://…';
-  const picker = hw.photoPicker([]);
   const status = el('p', 'ed-status'); status.setAttribute('aria-live', 'polite');
   const save = el('button', 'ed-primary', tr('save')); save.type = 'button';
-  const photosField = el('div', 'ed-field'); photosField.append(el('span', 'ed-label', tr('photos')), picker.node);
-  sheet.body.append(subject, field(tr('due'), due), field(tr('text'), text), field(tr('links'), links), photosField, status, save);
+  sheet.body.append(subject, field(tr('due'), due), field(tr('text'), text), field(tr('links'), links), status, save);
   text.focus();
   save.addEventListener('click', async () => {
     status.textContent = ''; status.classList.remove('bad');
@@ -1225,10 +1110,10 @@ function openHomeworkSheet(card) {
       const res = await hw.createHomework({
         lesson: hw.keyOf(card.dataset.day, card.dataset.start, card.dataset.subject, card.dataset.group), due: due.value, text: text.value,
         links: links.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean),
-      }, picker);
+      });
       if (!res.ok) { status.textContent = res.message || errorText(res); status.classList.add('bad'); return; }
       sheet.close();
-      toast(res.photosOk ? tr('hwSaved') : tr('photoFail'));
+      toast(tr('hwSaved'));
     } catch (_) { status.textContent = tr('errNet'); status.classList.add('bad'); }
     finally { save.disabled = false; }
   });
@@ -1391,15 +1276,10 @@ const L = {
     histTitle: 'Homework history', histNote: 'Kept for 30 days. Photos are removed earlier, after 14 days.', all: 'All subjects', search: 'Search text',
     dueTo: 'Due {date}', added: 'added by {name}, {date}', more: 'Show more', empty: 'No homework found.', offline: 'Offline. Showing the last saved list.', loading: 'Loading…', errNet: 'No connection to the cloud.',
   },
-  de: {
-    group: 'Mehr', history: '📚 Hausaufgaben-Verlauf', close: 'Schließen',
-    histTitle: 'Hausaufgaben-Verlauf', histNote: '30 Tage gespeichert. Fotos werden früher gelöscht, nach 14 Tagen.', all: 'Alle Fächer', search: 'Text suchen',
-    dueTo: 'Bis {date}', added: 'von {name}, {date}', more: 'Mehr anzeigen', empty: 'Keine Hausaufgaben gefunden.', offline: 'Offline. Zuletzt gespeicherte Liste.', loading: 'Lädt…', errNet: 'Keine Verbindung zur Cloud.',
-  },
 };
 const lang = () => i18n.getLanguage() || 'ru';
 const tr = (k, p) => String((L[lang()] || L.ru)[k] ?? L.ru[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => (p && p[n] !== undefined ? p[n] : ''));
-const LOCALES = { ru: 'ru-RU', en: 'en-GB', de: 'de-DE' };
+const LOCALES = { ru: 'ru-RU', en: 'en-GB' };
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
@@ -1515,7 +1395,6 @@ if (!i18n || !app) return;
 const L = {
   ru: { home: 'Главная', schedule: 'Пары', calendar: 'Календарь', game: 'Игры', settings: 'Настройки', homework: 'Д/з', aria: 'Разделы' },
   en: { home: 'Home', schedule: 'Timetable', calendar: 'Calendar', game: 'Games', settings: 'Settings', homework: 'Homework', aria: 'Sections' },
-  de: { home: 'Start', schedule: 'Plan', calendar: 'Kalender', game: 'Spiele', settings: 'Mehr', homework: 'Hausaufg.', aria: 'Bereiche' },
 };
 const tr = k => (L[i18n.getLanguage()] || L.ru)[k];
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
@@ -1625,19 +1504,6 @@ window.addEventListener('language:change', () => pulse(document.querySelector('h
       weekdays: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
       dayIn: 'Next class: {day}, {date}',
       dayLine: 'Today: {total} · left: {left} · ends at {end}', dayGap: 'Break now · classes left: {left} · ends at {end}', dayOver: 'Classes are over for today ({total} total)', dayNone: 'No classes today',
-    },
-    de: {
-      next: 'Nächste Unterrichtsstunde', now: 'Findet gerade statt', today: 'Heute', noClass: 'Keine weiteren Stunden',
-      starts: 'Beginnt in {time}', ends: 'Endet in {time}',
-      search: 'Stundenplan durchsuchen', searchPlaceholder: 'Fach, Lehrkraft oder Raum',
-      searchEmpty: 'Keine Treffer. Bitte Suche ändern.', current: 'Jetzt',
-      reminder: 'Stundenerinnerungen', reminderHint: 'Benachrichtigung 5 Minuten vor Beginn',
-      testBtn: 'Test-Benachrichtigung senden', testSent: 'Gesendet. Schauen Sie in die Benachrichtigungen.',
-      testPermission: 'Erlauben Sie Benachrichtigungen im Android-Dialog — der Test wird automatisch gesendet.',
-      testBlocked: 'Benachrichtigungen sind deaktiviert. Aktivieren Sie sie in den Android-Einstellungen.',
-      weekdays: ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'],
-      dayIn: 'Nächste Stunde: {day}, {date}',
-      dayLine: 'Heute: {total} · noch: {left} · Ende um {end}', dayGap: 'Gerade Pause · noch {left} · Ende um {end}', dayOver: 'Heute ist Schluss ({total} insgesamt)', dayNone: 'Heute keine Stunden',
     },
   };
 
@@ -1762,7 +1628,7 @@ window.addEventListener('language:change', () => pulse(document.querySelector('h
       nextStatus.textContent = replace(t('starts'), { time: countdown(item.start - now) });
     } else {
       const day = labels[language()].weekdays[item.start.getDay()];
-      const date = new Intl.DateTimeFormat(language() === 'ru' ? 'ru-RU' : language() === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'short' }).format(item.start);
+      const date = new Intl.DateTimeFormat(language() === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'short' }).format(item.start);
       nextStatus.textContent = replace(labels[language()].dayIn, { day, date });
     }
   }
@@ -2022,18 +1888,11 @@ const L = {
     installTitle: 'Install', installBtn: 'Install the app', installNote: 'It opens like a regular app and the timetable works offline.',
     iosNote: 'To install: tap Share in Safari and choose “Add to Home Screen”.', homework: 'Homework',
   },
-  de: {
-    share: 'Stunde teilen', copied: 'Kopiert', shareFail: 'Teilen nicht möglich',
-    offline: 'Keine Verbindung. Gespeicherte Daten werden angezeigt.', stale: 'Aktualisierung fehlgeschlagen. Gespeicherte Daten von {time}.', staleNoTime: 'Aktualisierung fehlgeschlagen. Gespeicherte Daten werden angezeigt.', retry: 'Erneut',
-    update: 'Neue Version verfügbar', reload: 'Aktualisieren', close: 'Schließen',
-    installTitle: 'Installation', installBtn: 'App installieren', installNote: 'Öffnet sich wie eine normale App, der Stundenplan funktioniert offline.',
-    iosNote: 'Installieren: In Safari auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen.', homework: 'Hausaufgabe',
-  },
 };
 const lang = () => (i18n && i18n.getLanguage()) || 'ru';
 const tr = (k, p) => String((L[lang()] || L.ru)[k]).replace(/\{(\w+)\}/g, (_, n) => (p && p[n] !== undefined ? p[n] : ''));
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
-const locale = () => ({ ru: 'ru-RU', en: 'en-GB', de: 'de-DE' }[lang()] || 'ru-RU');
+const locale = () => ({ ru: 'ru-RU', en: 'en-GB' }[lang()] || 'ru-RU');
 
 // заглушка загрузки на главной больше не нужна: карточка «Следующая пара» уже построена
 { const skel = document.getElementById('home-skeleton'); if (skel) skel.remove(); }
@@ -2182,15 +2041,11 @@ const L = {
     morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night', gap: 'break {n} min', gapH: 'break {h} h {m} min',
     back: 'Back',
   },
-  de: {
-    morning: 'Guten Morgen', day: 'Guten Tag', evening: 'Guten Abend', night: 'Gute Nacht', gap: 'Pause {n} Min.', gapH: 'Pause {h} Std. {m} Min.',
-    back: 'Zurück',
-  },
 };
 const lang = () => (i18n && i18n.getLanguage()) || 'ru';
 const tr = (k, p) => String((L[lang()] || L.ru)[k]).replace(/\{(\w+)\}/g, (_, n) => (p && p[n] !== undefined ? p[n] : ''));
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
-const locale = () => ({ ru: 'ru-RU', en: 'en-GB', de: 'de-DE' }[lang()] || 'ru-RU');
+const locale = () => ({ ru: 'ru-RU', en: 'en-GB' }[lang()] || 'ru-RU');
 const buzz = ms => { if (on() && navigator.vibrate) { try { navigator.vibrate(ms); } catch (_) { /* не поддерживается */ } } };
 
 // ---------- 1. иконки на плитках главной ----------
