@@ -6,6 +6,7 @@
   var LAZY = {"game": ["js/lazy-game.js"]}; /*LAZY*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
   var CACHE_KEY = 'schedule-json-cache';
+  var CLASS_ID = 'ИН-25-1';
   var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
 
   function put(id, text) {
@@ -47,10 +48,29 @@
     var d = JSON.parse(text);
     return d && Array.isArray(d.days) && Array.isArray(d.events) ? d : null;
   }
-  // Расписание: сеть (или кэш Service Worker/APK) -> при ошибке последняя удачная копия из localStorage
-  function getSchedule() {
-    return getText(DATA['schedule-data']).then(function (text) {
-      if (!validSchedule(text)) throw new Error('bad schedule');
+  // Расписание из облака (его правят староста и владелец). Не ответило за 4 секунды или ошибка — null, берётся файл сайта.
+  function getCloudSchedule(configText) {
+    var url = '';
+    try { url = String(JSON.parse(configText).cloudUrl || '').replace(/\/+$/, ''); } catch (e) {}
+    if (!url) return Promise.resolve(null);
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 4000);
+    return fetch(url + '/api/schedule?class=' + encodeURIComponent(CLASS_ID), { cache: 'no-cache', signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { if (!r.ok) throw new Error('cloud ' + r.status); return r.text(); })
+      .then(function (text) { return validSchedule(text) ? text : null; })
+      .catch(function () { return null; })
+      .then(function (v) { clearTimeout(timer); return v; });
+  }
+  var revOf = function (text) { var n = Number(JSON.parse(text).rev); return n > 0 ? n : 0; };
+  // Расписание: облако и файл сайта (или кэш Service Worker/APK) — берётся то, у которого версия (rev) больше, при равенстве — облако.
+  // Ничего не доступно — последняя удачная копия из localStorage.
+  function getSchedule(configPromise) {
+    var site = getText(DATA['schedule-data']).then(function (text) { return validSchedule(text) ? text : null; }, function () { return null; });
+    var cloud = configPromise.then(getCloudSchedule);
+    return Promise.all([site, cloud]).then(function (r) {
+      var text = r[0], c = r[1];
+      if (c && (!text || revOf(c) >= revOf(text))) text = c;
+      if (!text) throw new Error('bad schedule');
       try { localStorage.setItem(CACHE_KEY, text); } catch (e) {}
       return text;
     }).catch(function (err) {
@@ -68,11 +88,12 @@
     if (window.console) console.error(err);
   }
 
+  var configP = getText(OPTIONAL['app-config']).then(function (t) { JSON.parse(t); return t; }, function () { return '{}'; });
   Promise.all([
-    getSchedule(),
+    getSchedule(configP),
     getText(DATA['assessment-data']),
     getText(DATA['translation-data']),
-    getText(OPTIONAL['app-config']).then(function (t) { JSON.parse(t); return t; }, function () { return '{}'; })
+    configP
   ]).then(function (r) {
     put('schedule-data', r[0]); put('assessment-data', r[1]); put('translation-data', r[2]); put('app-config', r[3]);
     return loadAll(APP_SCRIPTS);
