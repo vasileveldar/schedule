@@ -21,6 +21,13 @@
     .adm-diff, .adm-warn { margin: 10px 0; padding: 8px 12px; border-left: 3px solid var(--line); border-radius: 6px; }
     .adm-diff h4, .adm-warn h4 { margin: 0 0 4px; font-size: 14px; }
     .adm-diff.add { border-left-color: #2f9e6f; } .adm-diff.chg { border-left-color: #d9a21b; } .adm-diff.del { border-left-color: #c8102e; } .adm-warn { border-left-color: #d9a21b; }
+    .adm-sheet { max-height: 280px; overflow: auto; margin: 10px 0; border: 1px solid var(--line); border-radius: 8px; }
+    .adm-sheet-table { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+    .adm-sheet-table th, .adm-sheet-table td { border: 1px solid var(--line); padding: 2px 6px; text-align: left; }
+    .adm-sheet-table tr:first-child th { position: sticky; top: 0; background: var(--paper); }
+    .adm-sheet-table th { color: var(--muted); font-weight: 650; background: var(--paper); }
+    .adm-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 12px; margin: 6px 0; }
+    .adm-class { max-width: 160px; }
     .adm-roles { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
     .adm-roles button { border: 0; border-right: 1px solid var(--line); background: var(--button, transparent); color: var(--ink); padding: 7px 10px; font: inherit; font-size: 13px; cursor: pointer; }
     .adm-roles button:last-child { border-right: 0; }

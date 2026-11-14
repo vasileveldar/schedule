@@ -168,6 +168,7 @@ function drawEvent(event){
   const time=el('div','time',clock(event.start));time.append(el('span','until',clock(event.end)));card.append(time);
   const details=el('div','details'),tags=el('div','tags');
   if(event.conflict)tags.append(el('span','tag conflict-tag',t('schedule.conflict')));
+  if(event.offsite)tags.append(el('span','tag offsite-tag',t('schedule.offsite'))); // занятие в другом месте (например, академическая мобильность)
   if(event.source==='assessment')tags.append(el('span','tag assessment-tag',t('schedule.rk1')));
   if(event.source==='srsp'){const tag=el('span','tag srsp',t('schedule.srsp'));tag.title=t('schedule.srspFull');tags.append(tag);}
   if(event.group&&event.group!=='Общее')tags.append(el('span','tag group',i18n.group(event.group)));
@@ -176,6 +177,7 @@ function drawEvent(event){
   if(event.type&&!(event.source==='srsp'&&event.type.trim().toUpperCase()==='СРСП'))details.append(el('div','detail',i18n.content('types',event.type)));
   if(event.teacher)details.append(el('div','detail',i18n.content('teachers',event.teacher)));
   if(event.room)details.append(el('div','detail room',i18n.room(event.room)));
+  if(event.offsite&&event.place)details.append(el('div','detail place','📍 '+event.place));
   if(event.conflictNote&&event.conflict)details.append(el('p','conflict-note',i18n.content('conflictNotes',event.conflictNote)));
   card.append(details);return card;
 }
@@ -574,7 +576,7 @@ if (!/^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$))/.test(cloud))
 const bridge = window.AppPreferences;
 const nativeApp = !!(bridge && typeof bridge.refreshHomework === 'function'); // в APK данные получает Android-часть
 const data = read('schedule-data');
-const CACHE_KEY = 'schedule-homework-cache';
+const CACHE_KEY = 'schedule-homework-cache' + (window.scheduleClass && !window.scheduleClass.isDefault ? ':' + window.scheduleClass.id : '');
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
 const clock = v => { const p = String(v || '').trim().split(':'); return p.length === 2 ? p[0].padStart(2, '0') + ':' + p[1].padStart(2, '0') : String(v || ''); };
 const keyOf = (day, start, subject, group) => [day, clock(start), subject, group || 'Общее'].join('|');
@@ -637,7 +639,7 @@ async function loadItems() {
   // сначала показываем сохранённое (экран не прыгает), затем обновляем из сети
   if (!items.length) { try { const saved = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); if (Array.isArray(saved) && saved.length) { items = saved; render(); } } catch (_) {} }
   try {
-    const url = nativeApp ? './data/homework.json' : cloud + '/api/homework';
+    const url = nativeApp ? './data/homework.json' : cloud + '/api/homework' + (window.scheduleClass ? window.scheduleClass.query() : '');
     const r = await fetch(url, { headers: nativeApp ? {} : headers(), cache: 'no-cache' });
     if (!r.ok) throw new Error(String(r.status));
     const list = await r.json();
@@ -920,7 +922,7 @@ const data = read('schedule-data');
 if (!data) return;
 const bridge = window.AppPreferences;
 const nativeApp = !!(bridge && typeof bridge.refreshHomework === 'function');
-const CACHE_KEY = 'schedule-overrides-cache';
+const CACHE_KEY = 'schedule-overrides-cache' + (window.scheduleClass && !window.scheduleClass.isDefault ? ':' + window.scheduleClass.id : '');
 
 const L = {
   ru: { cancel: 'Пара отменена', room: 'Аудитория: {v}', was: 'было {v}', teacher: 'Преподаватель: {v}', move: 'Перенос: {v}' },
@@ -988,7 +990,7 @@ function apply() {
 
 async function reload() {
   try {
-    const r = await fetch(nativeApp ? './data/overrides.json' : cloud + '/api/overrides', { cache: 'no-cache' });
+    const r = await fetch(nativeApp ? './data/overrides.json' : cloud + '/api/overrides' + (window.scheduleClass ? window.scheduleClass.query() : ''), { cache: 'no-cache' });
     if (!r.ok) throw new Error(String(r.status));
     const arr = await r.json();
     if (!Array.isArray(arr)) throw new Error('format');
@@ -1307,7 +1309,7 @@ function openSheet(title) {
 }
 
 // ---------- история д/з ----------
-const HIST_CACHE = 'schedule-hw-history';
+const HIST_CACHE = 'schedule-hw-history' + (window.scheduleClass && !window.scheduleClass.isDefault ? ':' + window.scheduleClass.id : '');
 function openHistory() {
   const sheet = openSheet(tr('histTitle'));
   const note = el('p', 'ed-sub', tr('histNote'));
@@ -1343,7 +1345,7 @@ function openHistory() {
   async function load(append) {
     const my = ++token;
     if (!append) { offset = 0; status.textContent = tr('loading'); status.classList.remove('bad'); }
-    const q = '?limit=20&offset=' + offset + (subject.value ? '&subject=' + encodeURIComponent(subject.value) : '') + (search.value.trim() ? '&q=' + encodeURIComponent(search.value.trim()) : '');
+    const q = '?limit=20&offset=' + offset + (subject.value ? '&subject=' + encodeURIComponent(subject.value) : '') + (search.value.trim() ? '&q=' + encodeURIComponent(search.value.trim()) : '') + (window.scheduleClass ? window.scheduleClass.amp() : '');
     try {
       const r = await cloud.request('GET', '/api/homework/history' + q);
       if (my !== token) return;
@@ -2290,4 +2292,75 @@ for (const id of ['mode-select', 'palette-select']) {
 if (mq.addEventListener) mq.addEventListener('change', () => { mode = mq.matches ? 'off' : 'full'; root.dataset.anim = mode; });
 onScroll();
 decorateSchedule();
+})();
+;
+/* js/groups.js */
+(() => {
+'use strict';
+/* Выбор учебной группы в «Настройках». Список групп берётся из облака (GET /api/groups); пока группа одна, строка скрыта.
+   Выбор запоминается на устройстве; в APK его ещё хранит приложение (оно скачивает расписание, д/з и изменения нужной группы);
+   в Mini App выбор записывается и в облако (POST /api/me/class), поэтому бот присылает расписание этой же группы.
+   Данные группы страница перечитывает перезагрузкой. */
+const sc = window.scheduleClass;
+if (!sc) return;
+const read = id => { const e = document.getElementById(id); try { return e ? JSON.parse(e.textContent) : null; } catch (_) { return null; } };
+const cloud = String((read('app-config') || {}).cloudUrl || '').replace(/\/+$/, '');
+if (!/^https:\/\//.test(cloud) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cloud)) return;
+const row = document.getElementById('class-row'), select = document.getElementById('class-select');
+if (!row || !select) return;
+const GROUPS_KEY = 'schedule-groups';
+const store = { get: k => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} } };
+
+function fill(groups) {
+  select.replaceChildren();
+  const list = groups.slice();
+  if (!list.some(g => g.id === sc.id)) list.push({ id: sc.id, title: sc.id }); // выбранная группа могла уйти в архив
+  for (const g of list) { const o = document.createElement('option'); o.value = g.id; o.textContent = g.title || g.id; select.append(o); }
+  select.value = sc.id;
+  row.hidden = groups.length < 2;
+}
+function cached() { try { const a = JSON.parse(store.get(GROUPS_KEY) || '[]'); return Array.isArray(a) ? a.filter(g => g && sc.valid(g.id)) : []; } catch (_) { return []; } }
+
+async function choose(id) {
+  if (!sc.valid(id) || id === sc.id) return;
+  store.set('schedule-class', id);
+  try { if (window.AppPreferences && typeof window.AppPreferences.setSelectedClass === 'function') window.AppPreferences.setSelectedClass(id); } catch (_) {}
+  // Mini App: запоминаем выбор в облаке (бот и напоминания берут группу оттуда)
+  try {
+    const hw = window.scheduleHomework;
+    if (hw && hw.me && hw.me() && hw.headers && hw.headers()['x-telegram-init-data']) {
+      await fetch(cloud + '/api/me/class', { method: 'POST', headers: { ...hw.headers(), 'content-type': 'application/json' }, body: JSON.stringify({ class: id }) });
+    }
+  } catch (_) {}
+  location.reload();
+}
+select.addEventListener('change', () => { choose(select.value); });
+
+fill(cached());
+fetch(cloud + '/api/groups', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status))))).then(list => {
+  if (!Array.isArray(list)) return;
+  const groups = list.filter(g => g && sc.valid(g.id)).map(g => ({ id: g.id, title: String(g.title || g.id) }));
+  store.set(GROUPS_KEY, JSON.stringify(groups));
+  fill(groups);
+}).catch(() => {});
+
+// Mini App: если человек сам группу здесь не выбирал, берём ту, что записана за ним в облаке (один раз за сеанс)
+(function syncFromCloud() {
+  if (store.get('schedule-class')) return;
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries++;
+    const hw = window.scheduleHomework, me = hw && hw.me && hw.me();
+    if (me && me.class) {
+      clearInterval(timer);
+      if (me.class !== sc.id && sc.valid(me.class)) {
+        let done = null; try { done = sessionStorage.getItem('schedule-class-sync'); } catch (_) {}
+        if (done) return;
+        try { sessionStorage.setItem('schedule-class-sync', '1'); } catch (_) {}
+        store.set('schedule-class', me.class);
+        location.reload();
+      }
+    } else if (tries > 12) clearInterval(timer);
+  }, 700);
+})();
 })();

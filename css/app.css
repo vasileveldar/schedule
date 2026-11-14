@@ -529,6 +529,9 @@ html{scroll-behavior:auto}
 button:active,a:active{transform:none}
 }
 @media print{header{box-shadow:none}.menu-card,.lesson{box-shadow:none}}
+.tag.offsite-tag{background:#7a4b00;color:#fff}
+[data-theme="dark"] .tag.offsite-tag{background:#e0a33a;color:#1b1204}
+.detail.place{font-weight:600}
 
 /* css/android.css */
 .fork-next-card,

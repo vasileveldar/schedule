@@ -5,8 +5,24 @@
   // грузятся при первом использовании: игры — при открытии вкладки «Игры»
   var LAZY = {"game": ["js/lazy-game.js"]}; /*LAZY*/
   var DATA = { 'schedule-data': 'data/schedule.json', 'assessment-data': 'data/assessment.json', 'translation-data': 'data/translations.json' };
-  var CACHE_KEY = 'schedule-json-cache';
-  var CLASS_ID = 'ИН-25-1';
+  var DEFAULT_CLASS = 'ИН-25-1';
+  // Учебная группа: выбирается в «Настройках» (список групп из облака); в APK её хранит приложение. По умолчанию — ИН-25-1, как раньше.
+  var CLASS_ID = DEFAULT_CLASS, nativeClass = false;
+  var CLASS_RE = /^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9 .\-]{0,23}$/;
+  try { var savedClass = localStorage.getItem('schedule-class'); if (savedClass && CLASS_RE.test(savedClass)) CLASS_ID = savedClass; } catch (e) {}
+  try {
+    if (window.AppPreferences && typeof window.AppPreferences.getSelectedClass === 'function') {
+      var appClass = String(window.AppPreferences.getSelectedClass() || ''); nativeClass = true;
+      if (CLASS_RE.test(appClass)) CLASS_ID = appClass;
+    }
+  } catch (e) {}
+  // для остальных скриптов: id группы и параметр для запросов к облаку (у группы по умолчанию его нет — адреса прежние)
+  window.scheduleClass = {
+    id: CLASS_ID, isDefault: CLASS_ID === DEFAULT_CLASS, DEFAULT: DEFAULT_CLASS, valid: function (v) { return CLASS_RE.test(String(v || '')); },
+    query: function () { return CLASS_ID === DEFAULT_CLASS ? '' : '?class=' + encodeURIComponent(CLASS_ID); },
+    amp: function () { return CLASS_ID === DEFAULT_CLASS ? '' : '&class=' + encodeURIComponent(CLASS_ID); }
+  };
+  var CACHE_KEY = CLASS_ID === DEFAULT_CLASS ? 'schedule-json-cache' : 'schedule-json-cache:' + CLASS_ID;
   var OPTIONAL = { 'app-config': 'data/app-config.json' }; // необязательные файлы: нет — не страшно
 
   function put(id, text) {
@@ -65,7 +81,9 @@
   // Расписание: облако и файл сайта (или кэш Service Worker/APK) — берётся то, у которого версия (rev) больше, при равенстве — облако.
   // Ничего не доступно — последняя удачная копия из localStorage.
   function getSchedule(configPromise) {
-    var site = getText(DATA['schedule-data']).then(function (text) { return validSchedule(text) ? text : null; }, function () { return null; });
+    // файл расписания на сайте — запасная копия группы по умолчанию (в APK data/schedule.json отдаёт приложение, и там он подходит любой группе)
+    var useStatic = CLASS_ID === DEFAULT_CLASS || nativeClass;
+    var site = useStatic ? getText(DATA['schedule-data']).then(function (text) { return validSchedule(text) ? text : null; }, function () { return null; }) : Promise.resolve(null);
     var cloud = configPromise.then(getCloudSchedule);
     return Promise.all([site, cloud]).then(function (r) {
       var text = r[0], c = r[1];
